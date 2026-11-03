@@ -65,7 +65,9 @@ Item {
   readonly property string drawerCorner: String(cfg("notifyCorner", "top-right"))
   readonly property int drawerWidth: Math.max(240, Number(cfg("notifyWidth", 380)))
   readonly property int drawerMax: Math.max(0, Number(cfg("notifyMax", 0)))
-  readonly property bool drawerFlatCards: String(cfg("notifyCards", "flat")) === "flat"
+  readonly property string cardStyle: String(cfg("notifyCards", "flat"))
+  readonly property bool drawerFlatCards: cardStyle === "flat"
+  readonly property bool nihilCards: cardStyle === "nihil"
   readonly property int drawerPad: 10
   FileView {
     path: service.home + "/.config/omarchy/notify-style.json"
@@ -84,6 +86,20 @@ Item {
     radius: Number(service.cfg("notifyRadius", 18))
   }
   readonly property var drawer: drawerSpec
+
+  // drawer: контурная подсветка Glyph живёт в kamradsmeshnyavy.customizer (glyph.json) —
+  // без плагина или с glyphEnabled=false процесс на каждое уведомление не запускаем.
+  property bool glyphOn: false
+  FileView {
+    path: service.home + "/.config/omarchy/glyph.json"
+    watchChanges: true
+    printErrors: false
+    onLoaded: {
+      try { service.glyphOn = JSON.parse(text() || "{}").glyphEnabled === true } catch (e) { service.glyphOn = false }
+    }
+    onLoadFailed: service.glyphOn = false
+    onFileChanged: reload()
+  }
 
   // Live Notification objects by originalId, kept OUT of the ListModels: a
   // QObject stored in a model role becomes a dangling C++ pointer when the
@@ -219,9 +235,12 @@ Item {
 
     persistPopupFile(snapshot)
     watchForUpdates(notification, snapshot)
-    // drawer: звук показа (omarchy-sound, выключатель — sounds.json). Тихие уведомления DND сюда не доходят.
+    // drawer: звук показа (omarchy-sound, выключатель — sounds.json) и контурная подсветка Glyph.
+    var isCritical = notification.urgency === NotificationUrgency.Critical
     Quickshell.execDetached([service.home + "/.local/bin/omarchy-sound",
-      notification.urgency === NotificationUrgency.Critical ? "dialog-warning" : "message-new-instant"])
+      isCritical ? "dialog-warning" : "message-new-instant"])
+    if (service.glyphOn)
+      Quickshell.execDetached(["omarchy-shell", "-q", "glyph", "notify", isCritical ? "true" : "false"])
     // Qt.callLater avoids "QV4::Object::insertMember" crashes when a
     // Repeater is mid-incubation while we mutate its model.
     Qt.callLater(function() {
@@ -1176,9 +1195,10 @@ Item {
               image: cardSlot.image
               urgency: cardSlot.urgency
               timestamp: cardSlot.timestamp
-              cornerRadius: service.cornerRadius
+              cornerRadius: service.nihilCards ? Number(service.cfg("notifyRadius", 18)) : service.cornerRadius
               flat: service.drawerStyle && service.drawerFlatCards
-              implicitWidth: service.drawerStyle ? service.drawerWidth : Style.space(380)
+              nihil: service.nihilCards
+              implicitWidth: (service.drawerStyle || service.nihilCards) ? service.drawerWidth : Style.space(380)
               fontFamily: service.shell && service.shell.bar ? service.shell.bar.fontFamily : ""
               glyph: cardSlot.glyph
 
