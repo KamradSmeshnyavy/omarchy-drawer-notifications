@@ -1049,8 +1049,18 @@ Item {
       Behavior on h { NumberAnimation { duration: service.drawer.ms(260); easing.type: Easing.OutCubic } }
 
       // floating: карточка с рамкой и тенью.
+      PaperCard {
+        visible: service.drawerStyle && !popupWindow.attached && popupWindow.h > 0.5 && service.drawer.paper
+        style: service.drawer
+        seed: 5
+        x: popupWindow.bodyX
+        y: popupWindow.bodyY
+        width: popupWindow.bodyW
+        height: popupWindow.h
+        radius: Math.min(service.drawer.cornerRadius, height / 2)
+      }
       Rectangle {
-        visible: service.drawerStyle && !popupWindow.attached && popupWindow.h > 0.5
+        visible: service.drawerStyle && !popupWindow.attached && popupWindow.h > 0.5 && !service.drawer.paper
         x: popupWindow.bodyX
         y: popupWindow.bodyY
         width: popupWindow.bodyW

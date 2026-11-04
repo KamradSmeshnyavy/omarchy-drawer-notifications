@@ -42,9 +42,11 @@ A sound per toast, if `~/.local/bin/omarchy-sound` exists (from the author's dot
 [omarchy-customizer](https://github.com/KamradSmeshnyavy/omarchy-customizer) → Presets → Style) tunes the panels on top
 of the bar: `elevation` 0–2 (shadows), `motion` (animation speed multiplier, 0 — none), `material`
 (`auto` / `solid` / `glass`), `cornerScale` (0 — square corners), `typeface` (`shell` — Omarchy font, `profile` — the
-sans of `~/.config/omarchy/fonts.json`; icons always stay on the Omarchy font). No file — the look as before.
+sans of `~/.config/omarchy/fonts.json`, `hand` — handwritten Caveat; icons always stay on the Omarchy font).
+`material: "paper"` draws floating panels as sheets of paper (`PaperCard.qml`: torn bottom edge, `texture` tile,
+tape). No file — the look as before.
 
-Edits to the stock files are marked `// drawer:`. `BarStyle.qml` is shared with
+Edits to the stock files are marked `// drawer:`. `BarStyle.qml` and `PaperCard.qml` are shared with
 [omarchy-desktop-widgets](https://github.com/KamradSmeshnyavy/omarchy-desktop-widgets) and
 [omarchy-edge-osd](https://github.com/KamradSmeshnyavy/omarchy-edge-osd).
 

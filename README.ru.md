@@ -28,7 +28,8 @@ omarchy plugin enable kamradsmeshnyavy.notifications   # обратно к ст�
 [omarchy-customizer](https://github.com/KamradSmeshnyavy/omarchy-customizer) → Пресеты → Стиль) настраивает панели поверх
 бара: `elevation` 0–2 (тени), `motion` (множитель скорости анимаций, 0 — без них), `material` (`auto` / `solid` /
 `glass`), `cornerScale` (0 — прямые углы), `typeface` (`shell` — шрифт Omarchy, `profile` — sans из
-`~/.config/omarchy/fonts.json`; иконки всегда в шрифте Omarchy). Нет файла — вид как раньше.
+`~/.config/omarchy/fonts.json`, `hand` — рукописный Caveat; иконки всегда в шрифте Omarchy). `material: "paper"` рисует
+плавающие панели листами бумаги (`PaperCard.qml`: рваный нижний край, тайл `texture`, скотч). Нет файла — вид как раньше.
 
 ## Лицензия
 

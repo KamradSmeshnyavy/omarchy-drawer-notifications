@@ -22,10 +22,12 @@ import "nihil" as Nihil
 // ключа — значение по умолчанию, вид как до стилей:
 //   elevation   0 — без теней · 1 — обычные · 2 — глубже (shadowOn / shadowOpacity / shadowBlur / lift)
 //   motion      множитель длительностей анимаций (ms(d)), 0 — без анимаций
-//   material    auto — как у бара · solid — сплошные панели · glass — стекло даже у сплошного бара
+//   material    auto — как у бара · solid — сплошные панели · glass — стекло даже у сплошного бара ·
+//               paper — бумага: непрозрачный лист с рваным краем, текстурой и скотчем (PaperCard.qml)
 //   cornerScale множитель скругления панелей (0 — прямые углы)
-//   typeface    shell — шрифт Omarchy · profile — sans профиля шрифтов (~/.config/omarchy/fonts.json)
-//   texture     путь к текстуре поверхности (пока не рисуется)
+//   typeface    shell — шрифт Omarchy · profile — sans профиля шрифтов (~/.config/omarchy/fonts.json) ·
+//               hand — рукописный (Caveat, ставится вместе с omarchy-customizer)
+//   texture     PNG-тайл поверхности (~ раскрывается); для тёмной панели берётся <имя>-dark.png рядом
 QtObject {
   id: style
 
@@ -53,11 +55,19 @@ QtObject {
   readonly property real lift: elevation          // множитель вертикального сдвига тени
   readonly property real motion: Math.max(0, num(look.motion, 1))
   function ms(d) { return Math.round(d * motion) }
-  readonly property string material: ["solid", "glass"].indexOf(String(look.material)) !== -1 ? String(look.material) : "auto"
+  readonly property string material: ["solid", "glass", "paper"].indexOf(String(look.material)) !== -1 ? String(look.material) : "auto"
+  readonly property bool paper: material === "paper"
   readonly property real cornerScale: Math.max(0, num(look.cornerScale, 1))
-  readonly property string fontFamily: look.typeface === "profile" && fonts.profile && fonts.profile !== "stock" && fonts.sans
+  readonly property string fontFamily: look.typeface === "hand" && Qt.fontFamilies().indexOf("Caveat") !== -1 ? "Caveat"
+    : look.typeface === "profile" && fonts.profile && fonts.profile !== "stock" && fonts.sans
     && Qt.fontFamilies().indexOf(String(fonts.sans)) !== -1 ? String(fonts.sans) : Commons.Style.font.family
-  readonly property string texture: String(look.texture || "")
+  readonly property string texture: String(look.texture || "").replace(/^~\//, home + "/")
+  // Тайл под цвет панели: светлой — тёмные чернила, тёмной — светлые (<имя>-dark.png).
+  readonly property bool darkSurface: 0.299 * color.r + 0.587 * color.g + 0.114 * color.b < 0.45
+  readonly property string textureSource: texture === "" ? ""
+    : "file://" + (darkSurface ? texture.replace(/\.png$/, "-dark.png") : texture)
+  // Скотч на бумажных панелях — цвет акцента темы.
+  readonly property color tapeColor: withAlpha(Commons.Color.accent, 0.55)
 
   function num(v, def) { var n = Number(v); return isFinite(n) ? n : def }
   function resolve(spec, fallback) {
@@ -81,7 +91,7 @@ QtObject {
     var a = num(skin.backgroundAlpha, -1)
     return a < 0 ? c : withAlpha(c, a)
   }
-  readonly property bool barGlass: material === "glass" ? true : material === "solid" ? false
+  readonly property bool barGlass: material === "glass" ? true : material === "solid" || material === "paper" ? false
     : barFill.a < 0.15 || shape === "islands" || skin.transparent === true
   readonly property bool barSolid: !barGlass && barFill.a >= 0.6
 
@@ -89,7 +99,8 @@ QtObject {
     || (attach === "auto" && barSolid && ["frame", "hug", "full"].indexOf(shape) !== -1)
 
   // ── Итог для отрисовки ────────────────────────────────────────────────
-  readonly property color color: !follow ? withAlpha(resolve(background, Commons.Color.popups.background), alpha)
+  readonly property color color: paper ? withAlpha(follow ? barFill : resolve(background, Commons.Color.popups.background), 1)
+    : !follow ? withAlpha(resolve(background, Commons.Color.popups.background), alpha)
     : barGlass ? withAlpha(Commons.Color.popups.background, blurOn ? 0.72 : 0.92)
     : withAlpha(barFill, Math.max(0.6, barFill.a))
   readonly property bool glass: follow && barGlass
