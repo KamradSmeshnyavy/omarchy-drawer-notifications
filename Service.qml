@@ -53,6 +53,17 @@ Item {
   readonly property int liveBarSize: shell && shell.bar && !shell.bar.barHidden ? Math.max(0, shell.bar.barSize) : defaultBarSize
   readonly property int barClearance: liveBarSize + Style.gapsOut
 
+  // drawer: меню Super+M (kamradsmeshnyavy.widgets) пишет "1" / "0" в $XDG_RUNTIME_DIR/omarchy-settings-open.
+  property bool settingsOpen: false
+  property FileView settingsFlag: FileView {
+    path: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/omarchy-settings-open"
+    watchChanges: true
+    printErrors: false
+    onLoaded: service.settingsOpen = String(text()).trim() === "1"
+    onLoadFailed: service.settingsOpen = false
+    onFileChanged: reload()
+  }
+
   // drawer: настройки из ~/.config/omarchy/notify-style.json (Customizer → Окна → Уведомления):
   //   notifyStyle drawer|stock, notifyCorner top-right|top-left|top-center, notifyWidth, notifyMax (0 — все),
   //   notifyCards flat|bordered, notifyFollowBar, notifyAttach auto|attached|floating,
@@ -1013,17 +1024,22 @@ Item {
       required property var modelData
       screen: modelData
       // drawer: окно живёт, пока подложка не досворачивается.
-      visible: popupModel.count > 0 || h > 0.5
+      // drawer: пока открыто меню Super+M (в нём та же история), тосты не показываются — как в NIHIL;
+      // таймеры идут, свежие появятся после закрытия меню.
+      visible: (popupModel.count > 0 || h > 0.5) && !service.settingsOpen
 
       WlrLayershell.namespace: "omarchy-notifications"
       WlrLayershell.layer: WlrLayer.Overlay
       WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
       // drawer: Normal — окно занимает область внутри бара и рамки, его угол = их внутренний угол.
-      exclusionMode: service.drawerStyle ? ExclusionMode.Normal : ExclusionMode.Ignore
+      // drawer: и у stock тоже — тост встаёт внутри бара и рамки, а не на них (бар слева, рамка, gaps 0).
+      exclusionMode: ExclusionMode.Normal
       color: "transparent"
 
-      readonly property var popupPlacement: NotificationLogic.popupPlacement(
-        service.barPosition, service.barClearance, Style.gapsOut)
+      // drawer: окно уже внутри бара и рамки (ExclusionMode.Normal), поэтому зазор от их внутреннего края —
+      // gaps_out, но не меньше 14 px (как в NIHIL), иначе при gaps 0 карточка прилипала к рамке.
+      readonly property real stockGap: Math.max(14, Style.gapsOut)
+      readonly property var popupPlacement: ({ margins: { top: stockGap, right: stockGap, bottom: stockGap, left: stockGap } })
 
       // Full-screen, fixed-size surface (like the OSD overlay). Adding or
       // removing a toast changes only the content inside; the Wayland surface

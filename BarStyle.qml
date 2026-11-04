@@ -87,7 +87,7 @@ QtObject {
     if (s === "accent") return Commons.Color.accent
     if (s === "muted") return Commons.Color.muted
     if (s === "urgent") return Commons.Color.urgent
-    if (s.indexOf("dotmatrix.") === 0 && DotMatrix.Palette[s.slice(6)] !== undefined) return DotMatrix.Palette[s.slice(6)]
+    if (s.indexOf("dotmatrix.") === 0 && DotMatrix.Palette[s.slice("dotmatrix.".length)] !== undefined) return DotMatrix.Palette[s.slice("dotmatrix.".length)]
     if (palette[s]) return Qt.color(palette[s])
     return fallback
   }
