@@ -58,7 +58,9 @@ QtObject {
   readonly property string material: ["solid", "glass", "paper"].indexOf(String(look.material)) !== -1 ? String(look.material) : "auto"
   readonly property bool paper: material === "paper"
   readonly property real cornerScale: Math.max(0, num(look.cornerScale, 1))
-  readonly property string fontFamily: look.typeface === "hand" && Qt.fontFamilies().indexOf("Caveat") !== -1 ? "Caveat"
+  // hand — шрифт заголовков профиля (fonts.json title: Caveat у paper-*), без него — Caveat.
+  readonly property string handFont: fonts.title && Qt.fontFamilies().indexOf(String(fonts.title)) !== -1 ? String(fonts.title) : "Caveat"
+  readonly property string fontFamily: look.typeface === "hand" && Qt.fontFamilies().indexOf(handFont) !== -1 ? handFont
     : look.typeface === "profile" && fonts.profile && fonts.profile !== "stock" && fonts.sans
     && Qt.fontFamilies().indexOf(String(fonts.sans)) !== -1 ? String(fonts.sans) : Commons.Style.font.family
   readonly property string texture: String(look.texture || "").replace(/^~\//, home + "/")
