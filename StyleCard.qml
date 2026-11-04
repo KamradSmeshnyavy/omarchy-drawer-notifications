@@ -2,11 +2,14 @@ import QtQuick
 import QtQuick.Effects
 import QtQuick.Shapes
 
-// Бумажная карточка стиля Paper (material: "paper" в ~/.config/omarchy/style.json):
-// непрозрачный лист с чуть неровными краями и рваным нижним краем, тайл текстуры
-// (BarStyle.textureSource), тень по токенам стиля и полоска скотча сверху.
-// Подставляется вместо плавающей карточки (Rectangle) дашборда, меню выключения, OSD и
-// уведомлений. Один и тот же файл лежит в omarchy-desktop-widgets, omarchy-edge-osd и
+// Карточка панели по материалу стиля (BarStyle.material, ~/.config/omarchy/style.json):
+//   paper  — лист бумаги: неровные края, рваный низ, тайл текстуры, скотч (стиль Paper);
+//   soft   — неоморфизм: цвет фона, рельеф двумя мягкими тенями — тёмной и светлой;
+//   brutal — толстая рамка цвета текста и жёсткая смещённая тень без размытия;
+//   bevel  — ретро-кант: светлый сверху-слева, тёмный снизу-справа;
+//   glow   — неон: рамка акцента и свечение тем же цветом.
+// Подставляется вместо плавающей карточки (Rectangle) дашборда, меню выключения, OSD и уведомлений
+// (BarStyle.card). Один и тот же файл лежит в omarchy-desktop-widgets, omarchy-edge-osd и
 // omarchy-drawer-notifications — правки переносить во все три.
 Item {
   id: card
@@ -67,13 +70,103 @@ Item {
     pts.push(pts[0])
     return pts
   }
-  readonly property var points: outline(width, height, radius, seed, roughness, tear)
+  readonly property string material: style.material
+  readonly property bool paper: material === "paper"
+  readonly property var points: paper ? outline(width, height, radius, seed, roughness, tear) : []
+  function shade(c, k) { return Qt.rgba(c.r * k, c.g * k, c.b * k, 1) }
+  function lift(c, k) { return Qt.rgba(c.r + (1 - c.r) * k, c.g + (1 - c.g) * k, c.b + (1 - c.b) * k, 1) }
+
+  // ── soft: две тени — тёмная вниз-вправо, светлая вверх-влево ─────────
+  Rectangle {
+    visible: card.material === "soft"
+    anchors.fill: parent
+    radius: card.radius
+    color: card.style.color
+    layer.enabled: visible && card.width > 1
+    layer.effect: MultiEffect {
+      shadowEnabled: true
+      shadowColor: card.lift(card.style.color, card.style.darkSurface ? 0.12 : 0.85)
+      shadowOpacity: 0.9
+      shadowBlur: 0.7
+      shadowHorizontalOffset: -5
+      shadowVerticalOffset: -5
+    }
+  }
+  Rectangle {
+    visible: card.material === "soft"
+    anchors.fill: parent
+    radius: card.radius
+    color: card.style.color
+    layer.enabled: visible && card.width > 1
+    layer.effect: MultiEffect {
+      shadowEnabled: true
+      shadowColor: card.shade(card.style.color, card.style.darkSurface ? 0.35 : 0.72)
+      shadowOpacity: 0.95
+      shadowBlur: 0.8
+      shadowHorizontalOffset: 6
+      shadowVerticalOffset: 6
+    }
+  }
+
+  // ── brutal: жёсткая тень-плашка + толстая рамка ───────────────────────
+  Rectangle {
+    visible: card.material === "brutal"
+    x: 6
+    y: 6
+    width: parent.width
+    height: parent.height
+    radius: card.radius
+    color: card.style.inkColor
+  }
+  Rectangle {
+    visible: card.material === "brutal"
+    anchors.fill: parent
+    radius: card.radius
+    color: card.style.color
+    border.width: 3
+    border.color: card.style.inkColor
+  }
+
+  // ── bevel: заливка + светлый и тёмный кант по 2 px ────────────────────
+  Rectangle {
+    visible: card.material === "bevel"
+    anchors.fill: parent
+    color: card.style.color
+    Rectangle { anchors { left: parent.left; right: parent.right; top: parent.top } height: 2; color: card.lift(card.style.color, 0.45) }
+    Rectangle { anchors { left: parent.left; top: parent.top; bottom: parent.bottom } width: 2; color: card.lift(card.style.color, 0.45) }
+    Rectangle { anchors { left: parent.left; right: parent.right; bottom: parent.bottom } height: 2; color: card.shade(card.style.color, 0.4) }
+    Rectangle { anchors { right: parent.right; top: parent.top; bottom: parent.bottom } width: 2; color: card.shade(card.style.color, 0.4) }
+    Rectangle {
+      anchors { fill: parent; margins: 2 }
+      color: "transparent"
+      Rectangle { anchors { left: parent.left; right: parent.right; bottom: parent.bottom } height: 1; color: card.shade(card.style.color, 0.7) }
+      Rectangle { anchors { right: parent.right; top: parent.top; bottom: parent.bottom } width: 1; color: card.shade(card.style.color, 0.7) }
+    }
+  }
+
+  // ── glow: рамка акцента и свечение ────────────────────────────────────
+  Rectangle {
+    visible: card.material === "glow"
+    anchors.fill: parent
+    radius: card.radius
+    color: card.style.color
+    border.width: 1
+    border.color: card.style.accentColor
+    layer.enabled: visible && card.width > 1
+    layer.effect: MultiEffect {
+      shadowEnabled: true
+      shadowColor: card.style.accentColor
+      shadowOpacity: 0.85
+      shadowBlur: 1.0
+    }
+  }
 
   // Лист: заливка + обводка, тень — по токенам стиля.
   Item {
     id: sheet
     anchors.fill: parent
-    layer.enabled: card.style.shadowOn && card.width > 1
+    visible: card.paper
+    layer.enabled: card.paper && card.style.shadowOn && card.width > 1
     layer.effect: MultiEffect {
       shadowEnabled: true
       shadowColor: "#000000"
@@ -133,7 +226,7 @@ Item {
 
   // Скотч: полупрозрачная полоска цвета акцента, чуть повёрнута, с зубчатыми торцами.
   Shape {
-    visible: card.tape && card.width > 120
+    visible: card.paper && card.tape && card.width > 120
     width: 72
     height: 20
     x: Math.round(card.width / 2 - width / 2 + ((card.seed * 37) % 41) - 20)
