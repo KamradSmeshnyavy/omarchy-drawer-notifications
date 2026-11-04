@@ -1046,7 +1046,7 @@ Item {
       readonly property real bodyY: gap
       readonly property real target: popupModel.count > 0 ? popupColumn.height + 2 * service.drawerPad : 0
       property real h: target
-      Behavior on h { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+      Behavior on h { NumberAnimation { duration: service.drawer.ms(260); easing.type: Easing.OutCubic } }
 
       // floating: карточка с рамкой и тенью.
       Rectangle {
@@ -1059,8 +1059,8 @@ Item {
         color: service.drawer.color
         border.width: service.drawer.borderWidth
         border.color: service.drawer.borderColor
-        layer.enabled: true
-        layer.effect: MultiEffect { shadowEnabled: true; shadowColor: "#000000"; shadowOpacity: 0.4; shadowBlur: 0.8; shadowVerticalOffset: 3 }
+        layer.enabled: service.drawer.shadowOn
+        layer.effect: MultiEffect { shadowEnabled: true; shadowColor: "#000000"; shadowOpacity: service.drawer.shadowOpacity; shadowBlur: service.drawer.shadowBlur; shadowVerticalOffset: 3 * service.drawer.lift }
       }
 
       // attached, угол справа / слева: вогнутый угол к бару и к краю экрана (слева — зеркально).
@@ -1199,7 +1199,8 @@ Item {
               flat: service.drawerStyle && service.drawerFlatCards
               nihil: service.nihilCards
               implicitWidth: (service.drawerStyle || service.nihilCards) ? service.drawerWidth : Style.space(380)
-              fontFamily: service.shell && service.shell.bar ? service.shell.bar.fontFamily : ""
+              fontFamily: service.drawer.look.typeface === "profile" ? service.drawer.fontFamily
+                : service.shell && service.shell.bar ? service.shell.bar.fontFamily : ""
               glyph: cardSlot.glyph
 
               onCloseRequested: service.dismissPopup(cardSlot.index)

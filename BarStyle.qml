@@ -17,6 +17,15 @@ import "nihil" as Nihil
 //   attach  auto     — прилипать (вогнутые углы к бару / краю) только к сплошному бару у края:
 //                      frame, hug, full; иначе — плавающая карточка с отступом и тенью.
 //           attached / floating — принудительно.
+//
+// Токены стиля — ~/.config/omarchy/style.json (пишет Customizer → Пресеты → Стиль). Нет файла или
+// ключа — значение по умолчанию, вид как до стилей:
+//   elevation   0 — без теней · 1 — обычные · 2 — глубже (shadowOn / shadowOpacity / shadowBlur / lift)
+//   motion      множитель длительностей анимаций (ms(d)), 0 — без анимаций
+//   material    auto — как у бара · solid — сплошные панели · glass — стекло даже у сплошного бара
+//   cornerScale множитель скругления панелей (0 — прямые углы)
+//   typeface    shell — шрифт Omarchy · profile — sans профиля шрифтов (~/.config/omarchy/fonts.json)
+//   texture     путь к текстуре поверхности (пока не рисуется)
 QtObject {
   id: style
 
@@ -32,6 +41,23 @@ QtObject {
   readonly property string home: Quickshell.env("HOME")
 
   readonly property string shape: String(skin.shape || "full")
+
+  // ── Токены стиля ─────────────────────────────────────────────────────
+  property var look: ({})
+  property var fonts: ({})
+  readonly property string lookId: String(look.id || "")
+  readonly property int elevation: Math.max(0, Math.min(2, Math.round(num(look.elevation, 1))))
+  readonly property bool shadowOn: elevation > 0
+  readonly property real shadowOpacity: elevation >= 2 ? 0.55 : 0.4
+  readonly property real shadowBlur: elevation >= 2 ? 1.0 : 0.8
+  readonly property real lift: elevation          // множитель вертикального сдвига тени
+  readonly property real motion: Math.max(0, num(look.motion, 1))
+  function ms(d) { return Math.round(d * motion) }
+  readonly property string material: ["solid", "glass"].indexOf(String(look.material)) !== -1 ? String(look.material) : "auto"
+  readonly property real cornerScale: Math.max(0, num(look.cornerScale, 1))
+  readonly property string fontFamily: look.typeface === "profile" && fonts.profile && fonts.profile !== "stock" && fonts.sans
+    && Qt.fontFamilies().indexOf(String(fonts.sans)) !== -1 ? String(fonts.sans) : Commons.Style.font.family
+  readonly property string texture: String(look.texture || "")
 
   function num(v, def) { var n = Number(v); return isFinite(n) ? n : def }
   function resolve(spec, fallback) {
@@ -55,7 +81,8 @@ QtObject {
     var a = num(skin.backgroundAlpha, -1)
     return a < 0 ? c : withAlpha(c, a)
   }
-  readonly property bool barGlass: barFill.a < 0.15 || shape === "islands" || skin.transparent === true
+  readonly property bool barGlass: material === "glass" ? true : material === "solid" ? false
+    : barFill.a < 0.15 || shape === "islands" || skin.transparent === true
   readonly property bool barSolid: !barGlass && barFill.a >= 0.6
 
   readonly property bool attached: attach === "attached"
@@ -70,7 +97,7 @@ QtObject {
   readonly property color borderColor: follow
     ? withAlpha(resolve(skin.border, Commons.Color.accent), num(skin.borderAlpha, 1))
     : withAlpha(Commons.Color.accent, 0.4)
-  readonly property int cornerRadius: follow ? Math.max(10, Math.round(num(skin.radius, 12)) + 6) : radius
+  readonly property int cornerRadius: Math.round((follow ? Math.max(10, Math.round(num(skin.radius, 12)) + 6) : radius) * cornerScale)
   // Радиус вогнутых углов у бара: у frame / hug — как у бара.
   readonly property int flare: shape === "frame" || shape === "hug" ? Math.max(8, Math.round(num(skin.radius, 0))) : 14
 
@@ -91,6 +118,22 @@ QtObject {
     printErrors: false
     onLoaded: { try { style.skin = JSON.parse(text() || "{}") || {} } catch (e) { style.skin = {} } }
     onLoadFailed: style.skin = {}
+    onFileChanged: reload()
+  }
+  property FileView lookFile: FileView {
+    path: style.home + "/.config/omarchy/style.json"
+    watchChanges: true
+    printErrors: false
+    onLoaded: { try { style.look = JSON.parse(text() || "{}") || {} } catch (e) { style.look = {} } }
+    onLoadFailed: style.look = {}
+    onFileChanged: reload()
+  }
+  property FileView fontsFile: FileView {
+    path: style.home + "/.config/omarchy/fonts.json"
+    watchChanges: true
+    printErrors: false
+    onLoaded: { try { style.fonts = JSON.parse(text() || "{}") || {} } catch (e) { style.fonts = {} } }
+    onLoadFailed: style.fonts = {}
     onFileChanged: reload()
   }
   property FileView paletteFile: FileView {
