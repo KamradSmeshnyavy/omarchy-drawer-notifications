@@ -2,7 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.Commons as Commons
-import "nihil" as Nihil
+import "dotmatrix" as DotMatrix
 
 // Стиль панелей рядом с баром (дашборд, меню выключения, OSD, уведомления).
 // Один и тот же файл лежит в omarchy-desktop-widgets, omarchy-edge-osd и
@@ -87,7 +87,7 @@ QtObject {
     if (s === "accent") return Commons.Color.accent
     if (s === "muted") return Commons.Color.muted
     if (s === "urgent") return Commons.Color.urgent
-    if (s.indexOf("nihil.") === 0 && Nihil.Palette[s.slice(6)] !== undefined) return Nihil.Palette[s.slice(6)]
+    if (s.indexOf("dotmatrix.") === 0 && DotMatrix.Palette[s.slice(6)] !== undefined) return DotMatrix.Palette[s.slice(6)]
     if (palette[s]) return Qt.color(palette[s])
     return fallback
   }

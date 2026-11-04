@@ -4,7 +4,7 @@ Third-party attributions for kamradsmeshnyavy.notifications:
   Copyright (c) David Heinemeier Hansson / Basecamp (Omarchy, https://github.com/basecamp/omarchy)
   Licensed under the MIT License.
 
-- NIHIL monochrome notification cards (`notifyCards: "nihil"` in `components/NotificationCard.qml`)
+- DOT-MATRIX monochrome notification cards (`notifyCards: "dotmatrix"` in `components/NotificationCard.qml`)
   and Glyph edge-sweep event dispatch (`Service.qml`):
   Adapted from Nihil-Shell (https://github.com/poligle/Nihil-Shell)
   Copyright (c) 2026 Pol Iglesias

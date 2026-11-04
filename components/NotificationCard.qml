@@ -10,7 +10,7 @@ import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 import "../NotificationLogic.js" as NotificationLogic
-import "../nihil" as Nihil
+import "../dotmatrix" as DotMatrix
 
 BorderSurface {
   id: root
@@ -32,8 +32,8 @@ BorderSurface {
   // drawer: карточка внутри общей подложки — полупрозрачный фон, рамка невидима
   // (толщина та же, чтобы не сдвигалась вёрстка).
   property bool flat: false
-  // nihil: монохромная карточка #000000 с тонким контуром #2a2a2a и красным LED на critical.
-  property bool nihil: false
+  // dotmatrix: монохромная карточка #000000 с тонким контуром #2a2a2a и красным LED на critical.
+  property bool dotmatrix: false
 
   // System monospace font injected by the container.
   property string fontFamily: ""
@@ -76,9 +76,9 @@ BorderSurface {
   // doesn't push content under the bottom edge.
   implicitHeight: mainColumn.implicitHeight + borderTop + borderBottom
   radius: cornerRadius
-  color: nihil ? Nihil.Palette.bg : (flat ? Util.alpha(Commons.Color.notifications.text, 0.06) : Commons.Color.notifications.background)
-  borderSpec: nihil
-    ? Border.flat(hovered ? Nihil.Palette.muted : Nihil.Palette.line, 1)
+  color: dotmatrix ? DotMatrix.Palette.bg : (flat ? Util.alpha(Commons.Color.notifications.text, 0.06) : Commons.Color.notifications.background)
+  borderSpec: dotmatrix
+    ? Border.flat(hovered ? DotMatrix.Palette.muted : DotMatrix.Palette.line, 1)
     : (flat ? ({ color: "transparent", widths: cardBorderSpec.widths, gradient: null }) : cardBorderSpec)
   clip: true
 
@@ -109,9 +109,9 @@ BorderSurface {
     anchors.rightMargin: root.borderRight
     spacing: 0
 
-    // NIHIL metadata header: 6x6 red LED on critical, monochrome app icon, uppercase Space Mono app name, close glyph.
+    // DOT-MATRIX metadata header: 6x6 red LED on critical, monochrome app icon, uppercase Space Mono app name, close glyph.
     RowLayout {
-      visible: root.nihil
+      visible: root.dotmatrix
       Layout.fillWidth: true
       Layout.leftMargin: Style.space(14)
       Layout.rightMargin: Style.space(12)
@@ -123,11 +123,11 @@ BorderSurface {
         Layout.preferredWidth: 6
         Layout.preferredHeight: 6
         radius: 3
-        color: Nihil.Palette.danger
+        color: DotMatrix.Palette.danger
       }
 
       Image {
-        id: nihilAppIcon
+        id: dotmatrixAppIcon
         readonly property string src: root.iconSource(root.appIcon)
         visible: src.length > 0 && status !== Image.Error
         Layout.preferredWidth: 15
@@ -149,18 +149,18 @@ BorderSurface {
         textFormat: Text.PlainText
         elide: Text.ElideRight
         text: (root.app.length > 0 ? root.app : "NOTICE").toUpperCase()
-        font.family: Nihil.Palette.fontMono
+        font.family: DotMatrix.Palette.fontMono
         font.pixelSize: 10
         font.letterSpacing: 1.6
-        color: Nihil.Palette.muted
+        color: DotMatrix.Palette.muted
       }
 
       Text {
         textFormat: Text.PlainText
         text: String.fromCodePoint(0xF0156)
-        font.family: Nihil.Palette.fontIcon
+        font.family: DotMatrix.Palette.fontIcon
         font.pixelSize: 13
-        color: closeArea.containsMouse ? Nihil.Palette.fg : Nihil.Palette.muted
+        color: closeArea.containsMouse ? DotMatrix.Palette.fg : DotMatrix.Palette.muted
 
         MouseArea {
           id: closeArea
@@ -176,10 +176,10 @@ BorderSurface {
     // Text content.
     RowLayout {
       Layout.fillWidth: true
-      Layout.leftMargin: Style.space(root.nihil ? 14 : 12)
+      Layout.leftMargin: Style.space(root.dotmatrix ? 14 : 12)
       Layout.rightMargin: Style.space(12)
-      Layout.topMargin: root.nihil ? Style.space(6) : (root.singleLineToast ? Style.space(7) : Style.space(10))
-      Layout.bottomMargin: root.nihil ? Style.space(12) : (root.singleLineToast ? Style.space(7) : Style.space(10))
+      Layout.topMargin: root.dotmatrix ? Style.space(6) : (root.singleLineToast ? Style.space(7) : Style.space(10))
+      Layout.bottomMargin: root.dotmatrix ? Style.space(12) : (root.singleLineToast ? Style.space(7) : Style.space(10))
       spacing: root.collapseRedundantIcon ? 0 : (root.compactGlyph ? Style.space(8) : Style.space(12))
 
       Item {
@@ -190,7 +190,7 @@ BorderSurface {
         // Hide the slot when the icon failed to resolve (themed-icon name
         // not in the user's icon theme) AND we don't have a glyph fallback
         // — prevents rendering Qt's pink broken-image placeholder.
-        visible: (!root.nihil || root.image.length > 0 || (root.hasGlyph && !root.compactGlyph))
+        visible: (!root.dotmatrix || root.image.length > 0 || (root.hasGlyph && !root.compactGlyph))
           && !root.collapseRedundantIcon && !root.compactGlyph && (root.hasSmallIcon || root.hasGlyph)
           && (root.hasGlyph || smallIconImage.status !== Image.Error)
 
@@ -204,7 +204,7 @@ BorderSurface {
           asynchronous: true
           smooth: true
           visible: !root.hasGlyph || smallIconImage.status === Image.Ready
-          layer.enabled: root.nihil
+          layer.enabled: root.dotmatrix
           layer.effect: MultiEffect {
             saturation: -1
           }
@@ -217,7 +217,7 @@ BorderSurface {
           anchors.centerIn: parent
           visible: root.hasGlyph && smallIconImage.status !== Image.Ready
           text: root.glyph
-          color: root.nihil ? Nihil.Palette.fg : Commons.Color.notifications.text
+          color: root.dotmatrix ? DotMatrix.Palette.fg : Commons.Color.notifications.text
           font.family: root.fontFamily
           font.pixelSize: Style.font.displayLarge
         }
@@ -228,7 +228,7 @@ BorderSurface {
         Layout.alignment: Qt.AlignVCenter
         visible: root.compactGlyph
         text: root.glyph
-        color: root.nihil ? Nihil.Palette.fg : Commons.Color.notifications.text
+        color: root.dotmatrix ? DotMatrix.Palette.fg : Commons.Color.notifications.text
         font.family: root.fontFamily
         font.pixelSize: Style.font.icon
       }
@@ -247,10 +247,10 @@ BorderSurface {
           Layout.fillWidth: true
           visible: root.summary.length > 0
           text: root.summary
-          font.family: root.nihil ? Nihil.Palette.fontTitle : "Liberation Sans"
-          color: root.nihil ? Nihil.Palette.fg : Commons.Color.notifications.text
-          font.pixelSize: root.nihil ? (Nihil.Palette.dotLayer ? 17 : 15) : Style.font.title
-          font.weight: root.nihil ? Nihil.Palette.titleWeight(Font.Medium) : Font.Bold
+          font.family: root.dotmatrix ? DotMatrix.Palette.fontTitle : "Liberation Sans"
+          color: root.dotmatrix ? DotMatrix.Palette.fg : Commons.Color.notifications.text
+          font.pixelSize: root.dotmatrix ? (DotMatrix.Palette.dotLayer ? 17 : 15) : Style.font.title
+          font.weight: root.dotmatrix ? DotMatrix.Palette.titleWeight(Font.Medium) : Font.Bold
           wrapMode: Text.WordWrap
           elide: Text.ElideRight
           maximumLineCount: 2
@@ -262,9 +262,9 @@ BorderSurface {
           visible: root.sanitizedBody.length > 0
           text: root.styledBody
           textFormat: Text.StyledText
-          font.family: root.nihil ? Nihil.Palette.fontSans : "Liberation Sans"
-          color: root.nihil ? Nihil.Palette.dim : root.bodyColor
-          font.pixelSize: root.nihil ? 13 : Style.font.title
+          font.family: root.dotmatrix ? DotMatrix.Palette.fontSans : "Liberation Sans"
+          color: root.dotmatrix ? DotMatrix.Palette.dim : root.bodyColor
+          font.pixelSize: root.dotmatrix ? 13 : Style.font.title
           wrapMode: Text.WordWrap
           elide: Text.ElideRight
           maximumLineCount: 3

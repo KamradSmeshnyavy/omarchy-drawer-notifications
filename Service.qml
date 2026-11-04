@@ -67,7 +67,7 @@ Item {
   readonly property int drawerMax: Math.max(0, Number(cfg("notifyMax", 0)))
   readonly property string cardStyle: String(cfg("notifyCards", "flat"))
   readonly property bool drawerFlatCards: cardStyle === "flat"
-  readonly property bool nihilCards: cardStyle === "nihil"
+  readonly property bool dotmatrixCards: cardStyle === "dotmatrix"
   readonly property int drawerPad: 10
   FileView {
     path: service.home + "/.config/omarchy/notify-style.json"
@@ -1205,10 +1205,10 @@ Item {
               image: cardSlot.image
               urgency: cardSlot.urgency
               timestamp: cardSlot.timestamp
-              cornerRadius: service.nihilCards ? Number(service.cfg("notifyRadius", 18)) : service.cornerRadius
+              cornerRadius: service.dotmatrixCards ? Number(service.cfg("notifyRadius", 18)) : service.cornerRadius
               flat: service.drawerStyle && service.drawerFlatCards
-              nihil: service.nihilCards
-              implicitWidth: (service.drawerStyle || service.nihilCards) ? service.drawerWidth : Style.space(380)
+              dotmatrix: service.dotmatrixCards
+              implicitWidth: (service.drawerStyle || service.dotmatrixCards) ? service.drawerWidth : Style.space(380)
               fontFamily: service.drawer.look.typeface === "profile" ? service.drawer.fontFamily
                 : service.shell && service.shell.bar ? service.shell.bar.fontFamily : ""
               glyph: cardSlot.glyph
