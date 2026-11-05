@@ -4,6 +4,7 @@
   "name": "Drawer Notifications",
   "version": "1.0.0",
   "author": "KamradSmeshnyavy",
+  "license": "MIT",
   "description": "Omarchy notifications in one panel glued to the bar, or a floating card — corner, width, limit, bar style",
   "kinds": [
     "service"

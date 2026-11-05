@@ -11,10 +11,27 @@
 ## Установка
 
 ```sh
-git clone https://github.com/KamradSmeshnyavy/omarchy-drawer-notifications ~/.config/omarchy/plugins/kamradsmeshnyavy.notifications
-omarchy-shell shell rescanPlugins
-omarchy plugin enable kamradsmeshnyavy.notifications   # обратно к стоку: omarchy plugin enable omarchy.notifications
+omarchy plugin add https://github.com/KamradSmeshnyavy/omarchy-drawer-notifications --enable
+omarchy restart shell
 ```
+
+## Требования
+
+Omarchy 4 (Quattro) с его оболочкой. Проверено на Omarchy 4.0.6 и Quickshell 0.3.2.
+
+- Ничего, кроме Omarchy (`notify-send` из libnotify).
+- Необязательно: [Customizer](https://github.com/KamradSmeshnyavy/omarchy-customizer) — его стили (Flat, Glass, Fluent, DOT-MATRIX) пишут `~/.config/omarchy/style.json`, плагин их подхватывает; без него — значения по умолчанию.
+- Дизайны DOT-MATRIX используют шрифты из [Customizer](https://github.com/KamradSmeshnyavy/omarchy-customizer) (Doto, Space Grotesk, Space Mono); без них — шрифт Omarchy.
+
+## Удаление
+
+```sh
+omarchy plugin enable omarchy.notifications      # сначала вернуть стоковый
+omarchy plugin remove kamradsmeshnyavy.notifications
+omarchy restart shell
+```
+
+Настройки остаются в `~/.config/omarchy/notify-style.json`, `~/.config/omarchy/glyph.json` — удалите их вручную, если не нужны.
 
 ## Настройки
 
