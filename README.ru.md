@@ -8,6 +8,10 @@
 экрана вогнутыми углами; с прозрачным или плавающим баром — плавающая карточка с отступом и тенью. Высота
 следует за числом тостов. Демон, «Не беспокоить», история и IPC — стоковые.
 
+![Тосты и шторка в стилях Стекло, Бумага и DOT-MATRIX](screenshots/styles.webp)
+
+<!-- Demo video: repo-videos/omarchy-drawer-notifications.mp4 — drag it here when editing this file on GitHub -->
+
 ## Установка
 
 ```sh

@@ -8,6 +8,10 @@ share one panel. With a solid bar glued to the edge — for example the `frame` 
 screen edge with concave corners; with a transparent or floating bar it is a floating card with a gap and a
 shadow. Its height follows the number of toasts. The daemon, Do Not Disturb, history and IPC are stock.
 
+![Toasts and the drawer in Glass, Paper and DOT-MATRIX](screenshots/styles.webp)
+
+<!-- Demo video: repo-videos/omarchy-drawer-notifications.mp4 — drag it here when editing this file on GitHub -->
+
 ## Install
 
 ```sh
