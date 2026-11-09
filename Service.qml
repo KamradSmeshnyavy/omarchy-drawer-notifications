@@ -476,9 +476,18 @@ Item {
 
   Process { id: focusAppProc; running: false }
 
+  // drawer: popups, history and image copies hold message text, so their
+  // directories are private (0700) and their files 0600 — under the default
+  // umask 022 another local account could read them. stateDir itself is
+  // shared with stock Omarchy and keeps its mode. Files left by older
+  // versions are tightened here once per start.
   Process {
     id: ensureDirsProc
-    command: ["mkdir", "-p", service.stateDir, service.popupStateDir, service.historyDir, service.imagesDir]
+    command: ["bash", "-c",
+      "umask 077\n" +
+      "mkdir -p \"$1\" \"$2\" \"$3\" \"$4\" || exit 0\n" +
+      "chmod -R go= -- \"$2\"", "--",
+      service.stateDir, service.popupStateDir, service.historyDir, service.imagesDir]
     running: false
   }
 
@@ -532,7 +541,13 @@ Item {
       return
     }
 
-    popupFileProc.command = job.command
+    // drawer: every file job is a bash script that may create files under
+    // popupStateDir; umask 077 keeps them private even if a job runs before
+    // ensureDirsProc (its own mkdir -p then makes 0700 directories too).
+    var command = job.command
+    if (command.length > 2 && command[0] === "bash" && command[1] === "-c")
+      command = ["bash", "-c", "umask 077\n" + command[2]].concat(command.slice(3))
+    popupFileProc.command = command
     popupFileProc.payload = job.payload || ""
     service.runningPopupFileJobDone = job.done || null
     popupFileProc.running = true
