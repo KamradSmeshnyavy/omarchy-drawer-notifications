@@ -24,7 +24,8 @@ import "dotmatrix" as DotMatrix
 //   motion      множитель длительностей анимаций (ms(d)), 0 — без анимаций
 //   material    auto — как у бара · solid — сплошные панели · glass — стекло даже у сплошного бара ·
 //               paper — бумага: лист с рваным краем, текстурой и скотчем · soft — неоморфизм · brutal — толстая
-//               рамка и жёсткая тень · bevel — ретро-кант · glow — неоновое свечение (всё рисует StyleCard.qml)
+//               рамка и жёсткая тень · bevel — ретро-кант · glow — неоновое свечение · liquid — жидкое стекло:
+//               прозрачнее glass, блик-ободок, свет сверху и подсветка акцентом (всё рисует StyleCard.qml)
 //   cornerScale множитель скругления панелей (0 — прямые углы)
 //   typeface    shell — шрифт Omarchy · profile — sans профиля шрифтов (~/.config/omarchy/fonts.json) ·
 //               hand — рукописный (Caveat, ставится вместе с omarchy-customizer)
@@ -56,11 +57,12 @@ QtObject {
   readonly property real lift: elevation          // множитель вертикального сдвига тени
   readonly property real motion: Math.max(0, num(look.motion, 1))
   function ms(d) { return Math.round(d * motion) }
-  readonly property string material: ["solid", "glass", "paper", "soft", "brutal", "bevel", "glow"].indexOf(String(look.material)) !== -1
+  readonly property string material: ["solid", "glass", "paper", "soft", "brutal", "bevel", "glow", "liquid"].indexOf(String(look.material)) !== -1
     ? String(look.material) : "auto"
   readonly property bool paper: material === "paper"
   // Плавающую карточку рисует StyleCard.qml (свой материал), иначе — обычный Rectangle.
-  readonly property bool card: ["paper", "soft", "brutal", "bevel", "glow"].indexOf(material) !== -1
+  readonly property bool card: ["paper", "soft", "brutal", "bevel", "glow", "liquid"].indexOf(material) !== -1
+  readonly property bool liquid: material === "liquid"
   readonly property color inkColor: Commons.Color.foreground
   readonly property color accentColor: Commons.Color.accent
   readonly property real cornerScale: Math.max(0, num(look.cornerScale, 1))
@@ -99,7 +101,7 @@ QtObject {
     var a = num(skin.backgroundAlpha, -1)
     return a < 0 ? c : withAlpha(c, a)
   }
-  readonly property bool barGlass: material === "glass" ? true : material === "solid" || card ? false
+  readonly property bool barGlass: material === "glass" || liquid ? true : material === "solid" || card ? false
     : barFill.a < 0.15 || shape === "islands" || skin.transparent === true
   readonly property bool barSolid: !barGlass && barFill.a >= 0.6
 
@@ -107,7 +109,10 @@ QtObject {
     || (attach === "auto" && barSolid && ["frame", "hug", "full"].indexOf(shape) !== -1)
 
   // ── Итог для отрисовки ────────────────────────────────────────────────
-  readonly property color color: card ? withAlpha(follow ? barFill : resolve(background, Commons.Color.popups.background), material === "glow" ? 0.92 : 1)
+  // liquid: фон темы, заметно прозрачнее стекла — объём дают блики StyleCard и размытие Hyprland за ним
+  // (без размытия — плотнее, иначе сквозь панель читается текст окон).
+  readonly property color color: liquid ? withAlpha(Commons.Color.popups.background, blurOn ? 0.42 : 0.88)
+    : card ? withAlpha(follow ? barFill : resolve(background, Commons.Color.popups.background), material === "glow" ? 0.92 : 1)
     : !follow ? withAlpha(resolve(background, Commons.Color.popups.background), alpha)
     : barGlass ? withAlpha(Commons.Color.popups.background, blurOn ? 0.72 : 0.92)
     : withAlpha(barFill, Math.max(0.6, barFill.a))

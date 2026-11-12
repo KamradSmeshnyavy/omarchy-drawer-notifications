@@ -7,7 +7,9 @@ import QtQuick.Shapes
 //   soft   — неоморфизм: цвет фона, рельеф двумя мягкими тенями — тёмной и светлой;
 //   brutal — толстая рамка цвета текста и жёсткая смещённая тень без размытия;
 //   bevel  — ретро-кант: светлый сверху-слева, тёмный снизу-справа;
-//   glow   — неон: рамка акцента и свечение тем же цветом.
+//   glow   — неон: рамка акцента и свечение тем же цветом;
+//   liquid — жидкое стекло (Vitreus): прозрачная заливка под размытием Hyprland, мягкая глубокая тень,
+//            световой блик сверху, ободок-блик (ярче сверху-слева) и слабая подсветка акцентом снизу.
 // Подставляется вместо плавающей карточки (Rectangle) дашборда, меню выключения, OSD и уведомлений
 // (BarStyle.card). Один и тот же файл лежит в omarchy-desktop-widgets, omarchy-edge-osd и
 // omarchy-drawer-notifications — правки переносить во все три.
@@ -158,6 +160,77 @@ Item {
       shadowColor: card.style.accentColor
       shadowOpacity: 0.85
       shadowBlur: 1.0
+    }
+  }
+
+  // ── liquid: жидкое стекло ──────────────────────────────────────────────
+  // Тень — RectangularShadow: рисует только тень по форме, ей не нужна непрозрачная заливка-источник
+  // (MultiEffect строит тень по альфе, а стекло почти прозрачное). Лёгкая — под стеклом она его чуть темнит.
+  RectangularShadow {
+    visible: card.material === "liquid" && card.style.shadowOn
+    anchors.fill: parent
+    radius: card.radius
+    offset.y: 8 * card.style.lift
+    blur: 28
+    spread: -4
+    color: Qt.rgba(0, 0, 0, card.style.elevation >= 2 ? 0.38 : 0.26)
+  }
+  Item {
+    visible: card.material === "liquid"
+    anchors.fill: parent
+
+    Rectangle {   // стекло
+      anchors.fill: parent
+      radius: card.radius
+      color: card.style.color
+    }
+    Rectangle {   // свет сверху: мягкий градиент на верхней трети
+      anchors { left: parent.left; right: parent.right; top: parent.top }
+      height: parent.height * 0.45
+      radius: card.radius
+      gradient: Gradient {
+        GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.13) }
+        GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.0) }
+      }
+    }
+    Rectangle {   // подсветка акцентом снизу — «преломление» цвета сквозь толщу
+      anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+      height: parent.height * 0.5
+      radius: card.radius
+      gradient: Gradient {
+        GradientStop { position: 0.0; color: Qt.rgba(card.style.accentColor.r, card.style.accentColor.g, card.style.accentColor.b, 0.0) }
+        GradientStop { position: 1.0; color: Qt.rgba(card.style.accentColor.r, card.style.accentColor.g, card.style.accentColor.b, 0.10) }
+      }
+    }
+    Rectangle {   // ободок
+      anchors.fill: parent
+      radius: card.radius
+      color: "transparent"
+      border.width: 1
+      border.color: Qt.rgba(1, 1, 1, 0.16)
+    }
+    Rectangle {   // блик по верхней кромке: ярче к левому краю
+      x: card.radius * 0.6
+      y: 0.5
+      width: parent.width - card.radius * 1.2
+      height: 1
+      gradient: Gradient {
+        orientation: Gradient.Horizontal
+        GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.0) }
+        GradientStop { position: 0.25; color: Qt.rgba(1, 1, 1, 0.65) }
+        GradientStop { position: 0.7; color: Qt.rgba(1, 1, 1, 0.18) }
+        GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.0) }
+      }
+    }
+    Rectangle {   // блик по левой кромке
+      x: 0.5
+      y: card.radius * 0.6
+      width: 1
+      height: parent.height * 0.5
+      gradient: Gradient {
+        GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.45) }
+        GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.0) }
+      }
     }
   }
 
