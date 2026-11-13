@@ -24,6 +24,12 @@ Item {
   // Насколько рваный край: обычные стороны — лёгкая неровность, низ — заметный разрыв.
   property real roughness: 1.2
   property real tear: 3.2
+  // liquid: имя слоя окна панели — тогда под карточкой настоящее стекло (LiquidGlass: преломляет обои), иначе
+  // прозрачная заливка под размытием Hyprland, как было.
+  property string glassLayer: ""
+  // или сразу место карточки на экране (окно у левого верхнего угла монитора — его координаты и есть экранные)
+  property point glassOrigin: Qt.point(NaN, NaN)
+  readonly property bool realGlass: card.material === "liquid" && (card.glassLayer !== "" || !isNaN(card.glassOrigin.x))
 
   // Точки контура: обход по часовой со скруглёнными углами, шаг ~9 px, сдвиг по
   // нормали из детерминированного ГПСЧ (mulberry32), чтобы край не «дрожал» при перерисовке.
@@ -180,11 +186,21 @@ Item {
     anchors.fill: parent
 
     Rectangle {   // стекло
+      visible: !card.realGlass
       anchors.fill: parent
       radius: card.radius
       color: card.style.color
     }
-    Rectangle {   // свет сверху: мягкий градиент на верхней трети
+    LiquidGlass {
+      visible: card.realGlass
+      active: card.realGlass && card.visible && card.width > 4
+      anchors.fill: parent
+      radius: card.radius
+      layerNamespace: card.glassLayer
+      screenOrigin: card.glassOrigin
+      tintColor: Qt.rgba(card.style.color.r, card.style.color.g, card.style.color.b, 1)
+    }
+    Rectangle {   visible: !card.realGlass  // свет сверху: мягкий градиент на верхней трети
       anchors { left: parent.left; right: parent.right; top: parent.top }
       height: parent.height * 0.45
       radius: card.radius
@@ -193,7 +209,7 @@ Item {
         GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.0) }
       }
     }
-    Rectangle {   // подсветка акцентом снизу — «преломление» цвета сквозь толщу
+    Rectangle {   visible: !card.realGlass  // подсветка акцентом снизу — «преломление» цвета сквозь толщу
       anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
       height: parent.height * 0.5
       radius: card.radius
@@ -202,14 +218,14 @@ Item {
         GradientStop { position: 1.0; color: Qt.rgba(card.style.accentColor.r, card.style.accentColor.g, card.style.accentColor.b, 0.10) }
       }
     }
-    Rectangle {   // ободок
+    Rectangle {   visible: !card.realGlass  // ободок
       anchors.fill: parent
       radius: card.radius
       color: "transparent"
       border.width: 1
       border.color: Qt.rgba(1, 1, 1, 0.16)
     }
-    Rectangle {   // блик по верхней кромке: ярче к левому краю
+    Rectangle {   visible: !card.realGlass  // блик по верхней кромке: ярче к левому краю
       x: card.radius * 0.6
       y: 0.5
       width: parent.width - card.radius * 1.2
@@ -222,7 +238,7 @@ Item {
         GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.0) }
       }
     }
-    Rectangle {   // блик по левой кромке
+    Rectangle {   visible: !card.realGlass  // блик по левой кромке
       x: 0.5
       y: card.radius * 0.6
       width: 1

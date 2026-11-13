@@ -1098,6 +1098,7 @@ Item {
       StyleCard {
         visible: service.drawerStyle && !popupWindow.attached && popupWindow.h > 0.5 && service.drawer.card
         style: service.drawer
+        glassLayer: "omarchy-notifications"
         seed: 5
         x: popupWindow.bodyX
         y: popupWindow.bodyY
