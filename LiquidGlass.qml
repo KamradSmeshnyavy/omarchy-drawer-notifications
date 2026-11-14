@@ -29,6 +29,14 @@ Item {
   property real tintAlpha: cfg.tint
   // На время анимаций (морф из бара) панель может попросить плёнку, чтобы не пересчитывать перекрытие.
   property bool forceFilm: false
+  // слой ниже окон (виджеты рабочего стола): окна над стеклом, а не под ним — обои под ним видны всегда
+  property bool belowWindows: false
+  // Перешеек (как у Vitreus — панель одним куском стекла с баром): вторая фигура joinRect в координатах этого элемента
+  // (обычно пилюля бара), joinK — ширина слияния. Стекло рисуется с запасом bleed вокруг элемента — там и тянется перешеек.
+  property rect joinRect: Qt.rect(0, 0, 0, 0)
+  property real joinRadius: 16
+  property real joinK: 0
+  property real bleed: 0
   property bool active: visible
   // окно панели прячется целиком, а элемент остаётся visible — смотреть и на окно
   readonly property bool live: active && Window.visibility !== Window.Hidden
@@ -70,7 +78,7 @@ Item {
   QtObject {
     id: cfg
     property real refraction: 0.55
-    property real dispersion: 0.35
+    property real dispersion: 0.2
     property real frost: 0.15
     property real lens: 18
     property real rim: 0.8
@@ -88,7 +96,7 @@ Item {
         var v = JSON.parse(text())
         function num(k, d, lo, hi) { var x = Number(v[k]); return isFinite(x) ? Math.max(lo, Math.min(hi, x)) : d }
         cfg.refraction = num("refraction", 0.55, 0, 1)
-        cfg.dispersion = num("dispersion", 0.35, 0, 1)
+        cfg.dispersion = num("dispersion", 0.2, 0, 1)
         cfg.frost = num("frost", 0.15, 0, 1)
         cfg.lens = num("lens", 18, 2, 60)
         cfg.rim = num("rim", 0.8, 0, 1)
@@ -159,7 +167,7 @@ Item {
     }
     return false
   }
-  readonly property real film: forceFilm || !placed || liveWall || !wallReady || (cfg.overWindows !== "glass" && overWindow) ? 1 : 0
+  readonly property real film: forceFilm || !placed || liveWall || !wallReady || (cfg.overWindows !== "glass" && !belowWindows && overWindow) ? 1 : 0
   property real filmAnim: film
   Behavior on filmAnim { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
 
@@ -176,14 +184,19 @@ Item {
 
   ShaderEffect {
     anchors.fill: parent
+    anchors.margins: -glass.bleed
+    readonly property vector4d panel: Qt.vector4d(glass.bleed, glass.bleed, glass.width, glass.height)
+    readonly property vector4d join: Qt.vector4d(glass.joinRect.x + glass.bleed, glass.joinRect.y + glass.bleed, glass.joinRect.width, glass.joinRect.height)
+    readonly property real joinR: glass.joinRadius
+    readonly property real joinK: glass.joinK
     property var sharpTex: sharp
     property var softTex: soft
     readonly property size size: Qt.size(width, height)
     readonly property size screen: glass.screenSize
-    readonly property point origin: glass.placed ? glass.origin : Qt.point(0, 0)
+    readonly property point origin: glass.placed ? Qt.point(glass.origin.x - glass.bleed, glass.origin.y - glass.bleed) : Qt.point(0, 0)
     readonly property size crop: glass.crop()
     readonly property color tint: Qt.rgba(glass.tintColor.r, glass.tintColor.g, glass.tintColor.b, glass.tintAlpha)
-    readonly property vector4d shine: Qt.vector4d(hov.point.position.x, hov.point.position.y, 1, glass.shineOn)
+    readonly property vector4d shine: Qt.vector4d(hov.point.position.x + glass.bleed, hov.point.position.y + glass.bleed, 1, glass.shineOn)
     readonly property real radius: glass.radius
     readonly property real lens: cfg.lens
     readonly property real refr: cfg.refraction

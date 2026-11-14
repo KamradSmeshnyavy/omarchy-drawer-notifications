@@ -28,6 +28,10 @@ layout(std140, binding = 0) uniform buf {
     float dome;     // купол света сверху 0…1
     float over;     // 0 — преломлять обои, 1 — плёнка над окнами
     float alphaOver;// непрозрачность плёнки над окнами
+    vec4 panel;     // сама панель внутри эффекта (эффект шире на bleed — там рисуется перешеек), px
+    vec4 join;      // вторая фигура — пилюля бара (или край, к которому тянется), px; w 0 — нет
+    float joinR;    // её скругление
+    float joinK;    // ширина «перешейка»: насколько мягко две фигуры сливаются (0 — не сливаются)
 };
 layout(binding = 1) uniform sampler2D sharpTex;
 layout(binding = 2) uniform sampler2D softTex;
@@ -43,18 +47,35 @@ vec3 wall(vec2 sp) {
     return mix(texture(sharpTex, uv).rgb, texture(softTex, uv).rgb, frost);
 }
 
+// плавное объединение (жидкий перешеек между панелью и баром)
+float smin(float a, float b, float k) {
+    if (k <= 0.0) return min(a, b);
+    float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+    return mix(b, a, h) - k * h * (1.0 - h);
+}
+
+float shape(vec2 p) {
+    vec2 c = panel.xy + panel.zw * 0.5;
+    float r = min(radius, min(panel.z, panel.w) * 0.5);
+    float d = sdBox(p - c, panel.zw * 0.5, r);
+    if (join.z > 0.5 && join.w > 0.5) {
+        vec2 jc = join.xy + join.zw * 0.5;
+        float jd = sdBox(p - jc, join.zw * 0.5, min(joinR, min(join.z, join.w) * 0.5));
+        d = smin(d, jd, joinK);
+    }
+    return d;
+}
+
 void main() {
     vec2 p = qt_TexCoord0 * size;
-    vec2 c = size * 0.5;
-    float r = min(radius, min(size.x, size.y) * 0.5);
-    float d = sdBox(p - c, c, r);
+    float d = shape(p);
     float mask = clamp(0.5 - d, 0.0, 1.0);
     if (mask <= 0.0) { fragColor = vec4(0.0); return; }
 
     // нормаль края — градиент расстояния
     float e = 1.0;
-    vec2 n = normalize(vec2(sdBox(p - c + vec2(e, 0.0), c, r) - sdBox(p - c - vec2(e, 0.0), c, r),
-                            sdBox(p - c + vec2(0.0, e), c, r) - sdBox(p - c - vec2(0.0, e), c, r)) + 1e-5);
+    vec2 n = normalize(vec2(shape(p + vec2(e, 0.0)) - shape(p - vec2(e, 0.0)),
+                            shape(p + vec2(0.0, e)) - shape(p - vec2(0.0, e))) + 1e-5);
     float inside = -d;                                   // 0 на краю, растёт внутрь
     float t = clamp(1.0 - inside / max(lens, 1.0), 0.0, 1.0);
     float bend = t * t * refr * lens * 1.6;              // у самого края сильнее, к середине — ноль
@@ -72,10 +93,10 @@ void main() {
     }
 
     // свет: купол сверху, ободок (ярче сверху-слева), блик под курсором
-    float domeL = dome * 0.10 * (1.0 - smoothstep(0.0, size.y * 0.55, p.y));
+    float domeL = dome * 0.10 * (1.0 - smoothstep(panel.y, panel.y + panel.w * 0.55, p.y));
     float lit = 0.55 + 0.45 * dot(-n, normalize(vec2(-0.55, -0.85)));
     float rimL = rim * (smoothstep(2.2, 0.0, inside) * 0.55 * lit + t * t * 0.10);
-    float sh = shine.z * shine.w * exp(-pow(length(p - shine.xy) / (min(size.x, size.y) * 0.45), 2.0)) * 0.16;
+    float sh = shine.z * shine.w * exp(-pow(length(p - shine.xy) / (min(panel.z, panel.w) * 0.45), 2.0)) * 0.16;
     col += vec3(domeL + rimL + sh);
 
     float a = mix(1.0, alphaOver, over);
