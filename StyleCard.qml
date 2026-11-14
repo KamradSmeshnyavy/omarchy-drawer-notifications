@@ -489,4 +489,7 @@ Item {
       }
     }
   }
+
+  // украшения основ Vitreus (cyber, paper, uwu, proxy, doodle) — на больших панелях (decor)
+  BaseDecor { card: card; z: 5 }
 }
