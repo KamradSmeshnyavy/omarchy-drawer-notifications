@@ -37,6 +37,8 @@ layout(std140, binding = 0) uniform buf {
     vec4 joinRK;    // x, y — скругление join2 / join3; z, w — их слияние
     vec4 hole;      // рамка вокруг экрана: всё поле эффекта минус скруглённая «дырка» hole (px)
     vec4 frame;     // x — 1 рамка есть, y — скругление дырки, z — слияние рамки с фигурами
+    vec4 cut;       // здесь стекло не рисуется (внутри бара или рамки: там своё стекло, фигура только тянется к нему)
+    vec4 cut2;
 };
 layout(binding = 1) uniform sampler2D sharpTex;
 layout(binding = 2) uniform sampler2D softTex;
@@ -83,6 +85,8 @@ float shape(vec2 p) {
 
 void main() {
     vec2 p = qt_TexCoord0 * size;
+    if ((cut.z > 0.5 && p.x > cut.x && p.y > cut.y && p.x < cut.x + cut.z && p.y < cut.y + cut.w) ||
+        (cut2.z > 0.5 && p.x > cut2.x && p.y > cut2.y && p.x < cut2.x + cut2.z && p.y < cut2.y + cut2.w)) { fragColor = vec4(0.0); return; }
     float d = shape(p);
     float mask = clamp(0.5 - d, 0.0, 1.0);
     if (mask <= 0.0) { fragColor = vec4(0.0); return; }

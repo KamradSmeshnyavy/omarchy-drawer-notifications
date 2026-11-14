@@ -36,6 +36,18 @@ Item {
   property real glassJoinK: 0
   property real glassJoinRadius: 16
   property real glassBleed: 0
+  // крылья (вторая фигура слияния — кусок кромки рамки) и вырезы: где стекло не рисовать (внутри бара и рамки)
+  property rect glassJoin2: Qt.rect(0, 0, 0, 0)
+  property real glassJoin2K: 0
+  property real glassJoin2Radius: 0
+  property rect glassCut: Qt.rect(0, 0, 0, 0)
+  property rect glassCut2: Qt.rect(0, 0, 0, 0)
+  // пластик: края, которыми карточка слита с баром или рамкой ("top" "bottom" "left" "right") — там нет контура,
+  // карточка заходит на mergeExt px на контур бара, по бокам — вогнутые изгибы mergeFillet с контуром
+  property var mergeEdges: []
+  property real mergeExt: 3
+  property real mergeFillet: 14
+  function merged(e) { return mergeEdges.indexOf(e) !== -1 }
   readonly property bool realGlass: card.material === "liquid" && (card.glassLayer !== "" || !isNaN(card.glassOrigin.x))
 
   // Точки контура: обход по часовой со скруглёнными углами, шаг ~9 px, сдвиг по
@@ -208,13 +220,28 @@ Item {
     readonly property point hard: ({ retro: Qt.point(6, 7), doodle: Qt.point(3.5, 3.5), proxy: Qt.point(3.4, 4) })[b] || Qt.point(0, 0)
     readonly property color hardColor: b === "proxy" ? "#2a8cff" : b === "doodle" ? ink : Qt.rgba(ink.r, ink.g, ink.b, 0.55)
 
+    // слитые края: тело тянется за край на ext (закрывает контур бара), а его свой контур и углы уходят за обрезку
+    readonly property real ext: card.mergeExt
+    readonly property real hide: ext + r + bw + 2
+    readonly property real eT: card.merged("top") ? ext : 0
+    readonly property real eB: card.merged("bottom") ? ext : 0
+    readonly property real eL: card.merged("left") ? ext : 0
+    readonly property real eR: card.merged("right") ? ext : 0
+    function grow(e) { return card.merged(e) ? hide : 0 }
+
     // жёсткая тень без размытия
-    Rectangle {
+    Item {
       visible: plastic.hard.x > 0
-      x: plastic.hard.x; y: plastic.hard.y
-      width: parent.width; height: parent.height
-      radius: plastic.r
-      color: plastic.hardColor
+      x: -plastic.eL; y: -plastic.eT
+      width: card.width + plastic.eL + (card.merged("right") ? plastic.eR : plastic.hard.x + 1)
+      height: card.height + plastic.eT + (card.merged("bottom") ? plastic.eB : plastic.hard.y + 1)
+      clip: card.mergeEdges.length > 0
+      Rectangle {
+        x: plastic.eL + plastic.hard.x - plastic.grow("left"); y: plastic.eT + plastic.hard.y - plastic.grow("top")
+        width: card.width + plastic.grow("left") + plastic.grow("right"); height: card.height + plastic.grow("top") + plastic.grow("bottom")
+        radius: plastic.r
+        color: plastic.hardColor
+      }
     }
     // мягкие тени (milk — две, paper — одна)
     RectangularShadow {
@@ -229,16 +256,38 @@ Item {
       offset: Qt.vector2d(plastic.b === "milk" ? 4 : 2, plastic.b === "milk" ? 5 : 4.5); blur: plastic.b === "milk" ? 13 : 12; spread: 0
       color: Qt.rgba(plastic.ink.r, plastic.ink.g, plastic.ink.b, plastic.b === "milk" ? 0.28 : 0.42)
     }
-    Rectangle {
-      anchors.fill: parent
-      radius: plastic.r
-      color: plastic.fill
-      border.width: plastic.bw
-      border.color: plastic.line
+    Item {
+      x: -plastic.eL; y: -plastic.eT
+      width: parent.width + plastic.eL + plastic.eR; height: parent.height + plastic.eT + plastic.eB
+      clip: card.mergeEdges.length > 0
+      Rectangle {
+        x: plastic.eL - plastic.grow("left"); y: plastic.eT - plastic.grow("top")
+        width: card.width + plastic.grow("left") + plastic.grow("right"); height: card.height + plastic.grow("top") + plastic.grow("bottom")
+        radius: plastic.r
+        color: plastic.fill
+        border.width: plastic.bw
+        border.color: plastic.line
+      }
+    }
+    // вогнутые изгибы у слитых краёв (по два на край)
+    Repeater {
+      model: card.mergeEdges.length > 0 ? [["top", -1], ["top", 1], ["bottom", -1], ["bottom", 1], ["left", -1], ["left", 1], ["right", -1], ["right", 1]]
+                                          .filter(function(m) {
+                                            // изгиб не нужен, если соседний край тоже слит (угол у рамки)
+                                            var adj = m[0] === "top" || m[0] === "bottom" ? (m[1] < 0 ? "left" : "right") : (m[1] < 0 ? "top" : "bottom")
+                                            return card.merged(m[0]) && !card.merged(adj)
+                                          }) : []
+      MergeFillet {
+        required property var modelData
+        edge: modelData[0]; side: modelData[1]
+        w: card.width; h: card.height
+        f: card.mergeFillet; bw: plastic.bw; ext: plastic.ext
+        fill: plastic.fill; line: plastic.line
+      }
     }
     // retro: светлая кромка (литой край)
     Rectangle {
-      visible: plastic.b === "retro"
+      visible: plastic.b === "retro" && !card.merged("top")
       x: plastic.bw + 1; y: plastic.bw + 1
       width: parent.width - 2 * (plastic.bw + 1); height: 2
       radius: 1
@@ -246,7 +295,7 @@ Item {
     }
     // retro: язычок на верхней кромке (78×24: основание, лицо акцентом, блик, контур)
     Item {
-      visible: plastic.b === "retro" && card.decor
+      visible: plastic.b === "retro" && card.decor && !card.merged("top")
       x: 58; y: -9
       width: 78; height: 24
       Rectangle { x: 2; y: 3; width: parent.width; height: parent.height; radius: 5; color: Qt.rgba(plastic.ink.r, plastic.ink.g, plastic.ink.b, 0.38) }
@@ -257,7 +306,7 @@ Item {
     }
     // retro: прорези-ручки снизу справа и винт слева
     Row {
-      visible: plastic.b === "retro" && card.decor
+      visible: plastic.b === "retro" && card.decor && !card.merged("bottom")
       anchors { right: parent.right; rightMargin: 20; bottom: parent.bottom; bottomMargin: -4 }
       spacing: 9
       Repeater {
@@ -301,6 +350,11 @@ Item {
       joinK: card.glassJoinK
       joinRadius: card.glassJoinRadius
       bleed: card.glassBleed
+      join2Rect: card.glassJoin2
+      join2K: card.glassJoin2K
+      join2Radius: card.glassJoin2Radius
+      cutRect: card.glassCut
+      cut2Rect: card.glassCut2
       tintColor: Qt.rgba(card.style.color.r, card.style.color.g, card.style.color.b, 1)
     }
     Rectangle {   visible: !card.realGlass  // свет сверху: мягкий градиент на верхней трети
