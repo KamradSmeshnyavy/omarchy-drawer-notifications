@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Effects
 import QtQuick.Shapes
+import qs.Commons as Commons
 
 // Карточка панели по материалу стиля (BarStyle.material, ~/.config/omarchy/style.json):
 //   paper  — лист бумаги: неровные края, рваный низ, тайл текстуры, скотч (стиль Paper);
@@ -179,7 +180,7 @@ Item {
   // Тень — RectangularShadow: рисует только тень по форме, ей не нужна непрозрачная заливка-источник
   // (MultiEffect строит тень по альфе, а стекло почти прозрачное). Лёгкая — под стеклом она его чуть темнит.
   RectangularShadow {
-    visible: card.material === "liquid" && card.style.shadowOn
+    visible: card.material === "liquid" && card.style.shadowOn && !card.style.plastic
     anchors.fill: parent
     radius: card.radius
     offset.y: 8 * card.style.lift
@@ -187,8 +188,99 @@ Item {
     spread: -4
     color: Qt.rgba(0, 0, 0, card.style.elevation >= 2 ? 0.38 : 0.26)
   }
+  // ── пластиковые основы тем Vitreus ────────────────────────────────────
+  // retro: заливка цвета фона темы, контур 2.3 px цвета текста, жёсткая тень (6, 7) без размытия, светлая кромка сверху;
+  //   на больших панелях (decor) — красный язычок на верхней кромке, прорези-ручки снизу справа и винт слева.
+  // doodle: кремовый лист, контур чернилами 2.8 px, сплошная тень-копия (3.5, 3.5). proxy: тёмная плита, синяя жёсткая
+  // тень (2.5, 3). milk: две мягкие тени — светлая сверху-слева и тёмная снизу-справа. paper: мягкая тень и тонкий контур.
+  property bool decor: false
   Item {
-    visible: card.material === "liquid"
+    id: plastic
+    visible: card.material === "liquid" && card.style.plastic
+    anchors.fill: parent
+    readonly property string b: card.style.base
+    readonly property color fill: Commons.Color.background
+    readonly property color ink: Commons.Color.foreground
+    readonly property color accent: Commons.Color.accent
+    readonly property real r: Math.max(2, card.radius * (1 - 0.73 * card.style.squareness))
+    readonly property real bw: ({ retro: 2.3, doodle: 2.8, proxy: 1.9, paper: 1.6 })[b] || 0
+    readonly property color line: b === "paper" ? Qt.rgba(ink.r, ink.g, ink.b, 0.45) : b === "proxy" ? Qt.rgba(0.9, 0.95, 0.96, 0.6) : ink
+    readonly property point hard: ({ retro: Qt.point(6, 7), doodle: Qt.point(3.5, 3.5), proxy: Qt.point(3.4, 4) })[b] || Qt.point(0, 0)
+    readonly property color hardColor: b === "proxy" ? "#2a8cff" : b === "doodle" ? ink : Qt.rgba(ink.r, ink.g, ink.b, 0.55)
+
+    // жёсткая тень без размытия
+    Rectangle {
+      visible: plastic.hard.x > 0
+      x: plastic.hard.x; y: plastic.hard.y
+      width: parent.width; height: parent.height
+      radius: plastic.r
+      color: plastic.hardColor
+    }
+    // мягкие тени (milk — две, paper — одна)
+    RectangularShadow {
+      visible: plastic.b === "milk"
+      anchors.fill: parent; radius: plastic.r
+      offset: Qt.vector2d(-4, -4); blur: 11; spread: 0
+      color: Qt.rgba(1, 1, 1, 0.5)
+    }
+    RectangularShadow {
+      visible: plastic.b === "milk" || plastic.b === "paper"
+      anchors.fill: parent; radius: plastic.r
+      offset: Qt.vector2d(plastic.b === "milk" ? 4 : 2, plastic.b === "milk" ? 5 : 4.5); blur: plastic.b === "milk" ? 13 : 12; spread: 0
+      color: Qt.rgba(plastic.ink.r, plastic.ink.g, plastic.ink.b, plastic.b === "milk" ? 0.28 : 0.42)
+    }
+    Rectangle {
+      anchors.fill: parent
+      radius: plastic.r
+      color: plastic.fill
+      border.width: plastic.bw
+      border.color: plastic.line
+    }
+    // retro: светлая кромка (литой край)
+    Rectangle {
+      visible: plastic.b === "retro"
+      x: plastic.bw + 1; y: plastic.bw + 1
+      width: parent.width - 2 * (plastic.bw + 1); height: 2
+      radius: 1
+      color: Qt.rgba(1, 1, 1, 0.4)
+    }
+    // retro: язычок на верхней кромке (78×24: основание, лицо акцентом, блик, контур)
+    Item {
+      visible: plastic.b === "retro" && card.decor
+      x: 58; y: -9
+      width: 78; height: 24
+      Rectangle { x: 2; y: 3; width: parent.width; height: parent.height; radius: 5; color: Qt.rgba(plastic.ink.r, plastic.ink.g, plastic.ink.b, 0.38) }
+      Rectangle { anchors.fill: parent; radius: 5; color: Qt.darker(plastic.accent, 1.35) }
+      Rectangle { width: parent.width; height: 19; y: 0; radius: 5; color: plastic.accent }
+      Rectangle { x: 6; y: 2; width: parent.width - 12; height: 2.2; radius: 1.1; color: Qt.rgba(1, 1, 1, 0.55) }
+      Rectangle { anchors.fill: parent; radius: 5; color: "transparent"; border.width: 1.4; border.color: plastic.ink }
+    }
+    // retro: прорези-ручки снизу справа и винт слева
+    Row {
+      visible: plastic.b === "retro" && card.decor
+      anchors { right: parent.right; rightMargin: 20; bottom: parent.bottom; bottomMargin: -4 }
+      spacing: 9
+      Repeater {
+        model: 8
+        Rectangle {
+          width: 6; height: 22; radius: 2
+          color: Qt.rgba(plastic.ink.r * 0.94 + 0.06, plastic.ink.g * 0.94 + 0.06, plastic.ink.b * 0.94 + 0.06, 1)
+          Rectangle { width: 1.2; height: parent.height - 3; x: 0.6; y: 1; color: Qt.rgba(1, 1, 1, 0.45) }
+        }
+      }
+    }
+    Rectangle {
+      visible: plastic.b === "retro" && card.decor
+      x: 12; anchors { bottom: parent.bottom; bottomMargin: 10 }
+      width: 7.2; height: 7.2; radius: 3.6
+      color: Qt.darker(plastic.fill, 1.25)
+      border.width: 1; border.color: plastic.ink
+      Rectangle { anchors.centerIn: parent; width: 5; height: 1.2; rotation: 35; color: plastic.ink }
+    }
+  }
+
+  Item {
+    visible: card.material === "liquid" && !card.style.plastic
     anchors.fill: parent
 
     Rectangle {   // стекло

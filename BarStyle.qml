@@ -63,6 +63,14 @@ QtObject {
   // Плавающую карточку рисует StyleCard.qml (свой материал), иначе — обычный Rectangle.
   readonly property bool card: ["paper", "soft", "brutal", "bevel", "glow", "liquid"].indexOf(material) !== -1
   readonly property bool liquid: material === "liquid"
+  // Основа темы (как base у тем Vitreus): glass — жидкое стекло; пластиковые — сплошная заливка с контуром и жёсткой
+  // тенью вместо стекла: retro (литой пластик), doodle (рисунок от руки), proxy (боевой HUD), milk (неоморфизм), paper.
+  // Пишет пресет (style.json base); без него — glass.
+  readonly property string base: ["glass", "obsidian", "retro", "uwu", "milk", "paper", "doodle", "cyber", "proxy"].indexOf(String(look.base)) !== -1
+    ? String(look.base) : "glass"
+  readonly property bool plastic: liquid && ["retro", "doodle", "proxy", "milk", "paper"].indexOf(base) !== -1
+  // квадратность углов (sq у Vitreus): 1 — почти прямые, 0 — как у стекла
+  readonly property real squareness: ({ retro: 1, doodle: 1, proxy: 1, cyber: 1, paper: 0.6 })[base] || 0
   readonly property color inkColor: Commons.Color.foreground
   readonly property color accentColor: Commons.Color.accent
   readonly property real cornerScale: Math.max(0, num(look.cornerScale, 1))
