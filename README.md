@@ -74,3 +74,5 @@ Edits to the stock files are marked `// drawer:`. `BarStyle.qml` and `StyleCard.
 ## License
 
 MIT (includes the stock Omarchy plugin it was cloned from).
+
+**Merging.** With the liquid style the drawer card sits flush against the frame / full-edge bar at its corner and joins it (concave corners; plastic bases drop the outline there, glass gets a neck) — `MergeInfo.qml` reads the bar geometry from `$XDG_RUNTIME_DIR/omarchy-bar-geom.json`.

@@ -1069,13 +1069,28 @@ Item {
       // drawer: окно уже внутри бара и рамки (ExclusionMode.Normal), поэтому зазор от их внутреннего края —
       // gaps_out, но не меньше 14 px (как в NIHIL), иначе при gaps 0 карточка прилипала к рамке.
       readonly property real stockGap: Math.max(14, Style.gapsOut)
-      readonly property var popupPlacement: ({ margins: { top: stockGap, right: stockGap, bottom: stockGap, left: stockGap } })
+      readonly property var popupPlacement: ({ margins: { top: stockGap + mergeExt, right: stockGap + mergeExt, bottom: stockGap + mergeExt, left: stockGap + mergeExt } })
 
       // Full-screen, fixed-size surface (like the OSD overlay). Adding or
       // removing a toast changes only the content inside; the Wayland surface
       // never resizes, so the compositor can't briefly scale a stale buffer --
       // which is what stretched/squished the cards during count changes.
       anchors { top: true; bottom: true; left: true; right: true }
+      // drawer: слияние с баром / рамкой (как у Vitreus): у жидкой карточки при сливающейся кромке (MergeInfo) — вплотную
+      // к ней, без зазора; окно заходит в бар / рамку на mergeExt px со всех сторон (отрицательный отступ), туда же —
+      // карточка, углы у кромки вогнутые
+      MergeInfo { id: mi }
+      readonly property bool liquidCard: service.drawerStyle && !attached && service.drawer.card && service.drawer.material === "liquid"
+      readonly property var mergeSides: {
+        if (!liquidCard) return []
+        var out = []
+        if (mi.has("top")) out.push("top")
+        if (service.drawerCorner === "top-right" && mi.has("right")) out.push("right")
+        if (service.drawerCorner === "top-left" && mi.has("left")) out.push("left")
+        return out
+      }
+      readonly property int mergeExt: liquidCard && mi.edges.length > 0 ? 3 : 0
+      margins { top: -mergeExt; bottom: -mergeExt; left: -mergeExt; right: -mergeExt }
 
       // Keep the surface click-through except over the toast column, so the
       // rest of the (invisible) full-screen overlay never eats input.
@@ -1084,12 +1099,13 @@ Item {
       // drawer: геометрия общей подложки. attached — у угла вплотную, floating — с отступом.
       readonly property bool attached: service.drawer.attached
       readonly property real gap: attached ? 0 : 10
+      function gapOf(e) { return mergeSides.indexOf(e) !== -1 ? 0 : gap }
       readonly property real flare: attached ? service.drawer.flare : 0
       readonly property real bodyW: popupColumn.width + 2 * service.drawerPad
-      readonly property real bodyX: service.drawerCorner === "top-left" ? gap
+      readonly property real bodyX: service.drawerCorner === "top-left" ? mergeExt + gapOf("left")
         : service.drawerCorner === "top-center" ? Math.round((width - bodyW) / 2)
-        : width - gap - bodyW
-      readonly property real bodyY: gap
+        : width - mergeExt - gapOf("right") - bodyW
+      readonly property real bodyY: mergeExt + gapOf("top")
       readonly property real target: popupModel.count > 0 ? popupColumn.height + 2 * service.drawerPad : 0
       property real h: target
       Behavior on h { NumberAnimation { duration: service.drawer.ms(260); easing.type: Easing.OutCubic } }
@@ -1105,6 +1121,25 @@ Item {
         width: popupWindow.bodyW
         height: popupWindow.h
         radius: Math.min(service.drawer.cornerRadius, height / 2)
+        // слияние: пластик — без контура у кромки, вогнутые углы; стекло — перешеек вдоль кромки, внутри бара не рисуется
+        mergeEdges: popupWindow.mergeSides
+        mergeFillet: 14
+        readonly property real fe: 20
+        readonly property var ms: popupWindow.mergeSides
+        function strip(e) {
+          return e === "top" ? Qt.rect(-fe, -5, width + 2 * fe, 5) : e === "left" ? Qt.rect(-5, -fe, 5, height + 2 * fe) : Qt.rect(width, -fe, 5, height + 2 * fe)
+        }
+        function beyond(e) {
+          return e === "top" ? Qt.rect(-4000, -4000, 8000, 4000 - 3) : e === "left" ? Qt.rect(-4000, -4000, 4000 - 3, 8000) : Qt.rect(width + 3, -4000, 4000, 8000)
+        }
+        glassBleed: ms.length ? fe + 10 : 0
+        glassJoin: ms.length > 0 ? strip(ms[0]) : Qt.rect(0, 0, 0, 0)
+        glassJoinK: ms.length > 0 ? 14 : 0
+        glassJoinRadius: 0
+        glassJoin2: ms.length > 1 ? strip(ms[1]) : Qt.rect(0, 0, 0, 0)
+        glassJoin2K: 14
+        glassCut: ms.length > 0 ? beyond(ms[0]) : Qt.rect(0, 0, 0, 0)
+        glassCut2: ms.length > 1 ? beyond(ms[1]) : Qt.rect(0, 0, 0, 0)
       }
       Rectangle {
         visible: service.drawerStyle && !popupWindow.attached && popupWindow.h > 0.5 && !service.drawer.card
