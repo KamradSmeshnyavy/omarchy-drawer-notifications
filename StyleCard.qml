@@ -296,7 +296,7 @@ Item {
     // retro: язычок на верхней кромке (78×24: основание, лицо акцентом, блик, контур)
     Item {
       visible: plastic.b === "retro" && card.decor && !card.merged("top")
-      x: 58; y: -9
+      x: Math.min(58, Math.max(12, (card.width - 78) / 2)); y: -9
       width: 78; height: 24
       Rectangle { x: 2; y: 3; width: parent.width; height: parent.height; radius: 5; color: Qt.rgba(plastic.ink.r, plastic.ink.g, plastic.ink.b, 0.38) }
       Rectangle { anchors.fill: parent; radius: 5; color: Qt.darker(plastic.accent, 1.35) }
@@ -309,8 +309,9 @@ Item {
       visible: plastic.b === "retro" && card.decor && !card.merged("bottom")
       anchors { right: parent.right; rightMargin: 20; bottom: parent.bottom; bottomMargin: -4 }
       spacing: 9
+      // узкая карточка (меню выключения) — прорезей меньше, чтобы не вылезали за винт
       Repeater {
-        model: 8
+        model: Math.max(0, Math.min(8, Math.floor((card.width - 60) / 15)))
         Rectangle {
           width: 6; height: 22; radius: 2
           color: Qt.rgba(plastic.ink.r * 0.94 + 0.06, plastic.ink.g * 0.94 + 0.06, plastic.ink.b * 0.94 + 0.06, 1)
