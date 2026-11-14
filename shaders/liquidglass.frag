@@ -32,6 +32,11 @@ layout(std140, binding = 0) uniform buf {
     vec4 join;      // вторая фигура — пилюля бара (или край, к которому тянется), px; w 0 — нет
     float joinR;    // её скругление
     float joinK;    // ширина «перешейка»: насколько мягко две фигуры сливаются (0 — не сливаются)
+    vec4 join2;     // ещё две фигуры (крылья у рамки, куски вырезов бара), px; w 0 — нет
+    vec4 join3;
+    vec4 joinRK;    // x, y — скругление join2 / join3; z, w — их слияние
+    vec4 hole;      // рамка вокруг экрана: всё поле эффекта минус скруглённая «дырка» hole (px)
+    vec4 frame;     // x — 1 рамка есть, y — скругление дырки, z — слияние рамки с фигурами
 };
 layout(binding = 1) uniform sampler2D sharpTex;
 layout(binding = 2) uniform sampler2D softTex;
@@ -62,6 +67,16 @@ float shape(vec2 p) {
         vec2 jc = join.xy + join.zw * 0.5;
         float jd = sdBox(p - jc, join.zw * 0.5, min(joinR, min(join.z, join.w) * 0.5));
         d = smin(d, jd, joinK);
+    }
+    if (join2.z > 0.5 && join2.w > 0.5)
+        d = smin(d, sdBox(p - join2.xy - join2.zw * 0.5, join2.zw * 0.5, min(joinRK.x, min(join2.z, join2.w) * 0.5)), joinRK.z);
+    if (join3.z > 0.5 && join3.w > 0.5)
+        d = smin(d, sdBox(p - join3.xy - join3.zw * 0.5, join3.zw * 0.5, min(joinRK.y, min(join3.z, join3.w) * 0.5)), joinRK.w);
+    if (frame.x > 0.5) {
+        // рамка: прямоугольник поля минус дырка с внутренними скруглениями (как у Vitreus и caelestia)
+        float outer = sdBox(p - size * 0.5, size * 0.5, 0.0);
+        float dh = sdBox(p - hole.xy - hole.zw * 0.5, hole.zw * 0.5, min(frame.y, min(hole.z, hole.w) * 0.5));
+        d = smin(d, max(outer, -dh), frame.z);
     }
     return d;
 }

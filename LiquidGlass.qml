@@ -37,6 +37,20 @@ Item {
   property real joinRadius: 16
   property real joinK: 0
   property real bleed: 0
+  // ещё две фигуры в координатах элемента (крылья у рамки, куски вырезов бара) и рамка вокруг поля стекла:
+  // frameHole — «дырка» (рабочая область) со скруглением frameHoleRadius, frameK — слияние рамки с фигурами
+  property rect join2Rect: Qt.rect(0, 0, 0, 0)
+  property real join2Radius: 16
+  property real join2K: 0
+  property rect join3Rect: Qt.rect(0, 0, 0, 0)
+  property real join3Radius: 16
+  property real join3K: 0
+  property bool frameOn: false
+  property rect frameHole: Qt.rect(0, 0, 0, 0)
+  property real frameHoleRadius: 24
+  property real frameK: 0
+  // главная фигура; по умолчанию — весь элемент
+  property rect panelRect: Qt.rect(0, 0, width, height)
   property bool active: visible
   // окно панели прячется целиком, а элемент остаётся visible — смотреть и на окно
   readonly property bool live: active && Window.visibility !== Window.Hidden
@@ -185,7 +199,12 @@ Item {
   ShaderEffect {
     anchors.fill: parent
     anchors.margins: -glass.bleed
-    readonly property vector4d panel: Qt.vector4d(glass.bleed, glass.bleed, glass.width, glass.height)
+    readonly property vector4d panel: Qt.vector4d(glass.panelRect.x + glass.bleed, glass.panelRect.y + glass.bleed, glass.panelRect.width, glass.panelRect.height)
+    readonly property vector4d join2: Qt.vector4d(glass.join2Rect.x + glass.bleed, glass.join2Rect.y + glass.bleed, glass.join2Rect.width, glass.join2Rect.height)
+    readonly property vector4d join3: Qt.vector4d(glass.join3Rect.x + glass.bleed, glass.join3Rect.y + glass.bleed, glass.join3Rect.width, glass.join3Rect.height)
+    readonly property vector4d joinRK: Qt.vector4d(glass.join2Radius, glass.join3Radius, glass.join2K, glass.join3K)
+    readonly property vector4d hole: Qt.vector4d(glass.frameHole.x + glass.bleed, glass.frameHole.y + glass.bleed, glass.frameHole.width, glass.frameHole.height)
+    readonly property vector4d frame: Qt.vector4d(glass.frameOn ? 1 : 0, glass.frameHoleRadius, glass.frameK, 0)
     readonly property vector4d join: Qt.vector4d(glass.joinRect.x + glass.bleed, glass.joinRect.y + glass.bleed, glass.joinRect.width, glass.joinRect.height)
     readonly property real joinR: glass.joinRadius
     readonly property real joinK: glass.joinK
