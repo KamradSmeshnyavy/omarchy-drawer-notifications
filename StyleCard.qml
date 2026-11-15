@@ -7,6 +7,7 @@ import qs.Commons as Commons
 //   paper  — лист бумаги: неровные края, рваный низ, тайл текстуры, скотч (стиль Paper);
 //   soft   — неоморфизм: цвет фона, рельеф двумя мягкими тенями — тёмной и светлой;
 //   brutal — толстая рамка цвета текста и жёсткая смещённая тень без размытия;
+//   pixel — графитовая панель yami: рамка в пиксель (текст 16 %) и жёсткая тень 3 px;
 //   bevel  — ретро-кант: светлый сверху-слева, тёмный снизу-справа;
 //   glow   — неон: рамка акцента и свечение тем же цветом;
 //   liquid — жидкое стекло (Vitreus): прозрачная заливка под размытием Hyprland, мягкая глубокая тень,
@@ -152,6 +153,23 @@ Item {
     color: card.style.color
     border.width: 3
     border.color: card.style.inkColor
+  }
+
+  // ── pixel (yami): плоская панель, рамка в пиксель, жёсткая тень 3 px ──
+  Rectangle {
+    visible: card.material === "pixel"
+    x: 3; y: 3
+    width: parent.width; height: parent.height
+    radius: card.radius
+    color: Qt.rgba(0, 0, 0, 0.55)
+  }
+  Rectangle {
+    visible: card.material === "pixel"
+    anchors.fill: parent
+    radius: card.radius
+    color: card.style.color
+    border.width: 1
+    border.color: Qt.rgba(card.style.inkColor.r, card.style.inkColor.g, card.style.inkColor.b, 0.16)
   }
 
   // ── bevel: заливка + светлый и тёмный кант по 2 px ────────────────────

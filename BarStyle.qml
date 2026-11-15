@@ -25,7 +25,8 @@ import "dotmatrix" as DotMatrix
 //   material    auto — как у бара · solid — сплошные панели · glass — стекло даже у сплошного бара ·
 //               paper — бумага: лист с рваным краем, текстурой и скотчем · soft — неоморфизм · brutal — толстая
 //               рамка и жёсткая тень · bevel — ретро-кант · glow — неоновое свечение · liquid — жидкое стекло:
-//               прозрачнее glass, блик-ободок, свет сверху и подсветка акцентом (всё рисует StyleCard.qml)
+//               прозрачнее glass, блик-ободок, свет сверху и подсветка акцентом · pixel — графитовая панель yami:
+//               рамка в пиксель и жёсткая тень в 3 px без размытия (всё рисует StyleCard.qml)
 //   cornerScale множитель скругления панелей (0 — прямые углы)
 //   typeface    shell — шрифт Omarchy · profile — sans профиля шрифтов (~/.config/omarchy/fonts.json) ·
 //               hand — рукописный (Caveat, ставится вместе с omarchy-customizer)
@@ -57,11 +58,11 @@ QtObject {
   readonly property real lift: elevation          // множитель вертикального сдвига тени
   readonly property real motion: Math.max(0, num(look.motion, 1))
   function ms(d) { return Math.round(d * motion) }
-  readonly property string material: ["solid", "glass", "paper", "soft", "brutal", "bevel", "glow", "liquid"].indexOf(String(look.material)) !== -1
+  readonly property string material: ["solid", "glass", "paper", "soft", "brutal", "bevel", "glow", "liquid", "pixel"].indexOf(String(look.material)) !== -1
     ? String(look.material) : "auto"
   readonly property bool paper: material === "paper"
   // Плавающую карточку рисует StyleCard.qml (свой материал), иначе — обычный Rectangle.
-  readonly property bool card: ["paper", "soft", "brutal", "bevel", "glow", "liquid"].indexOf(material) !== -1
+  readonly property bool card: ["paper", "soft", "brutal", "bevel", "glow", "liquid", "pixel"].indexOf(material) !== -1
   readonly property bool liquid: material === "liquid"
   // Основа темы (как base у тем Vitreus): glass — жидкое стекло; пластиковые — сплошная заливка с контуром и жёсткой
   // тенью вместо стекла: retro (литой пластик), doodle (рисунок от руки), proxy (боевой HUD), milk (неоморфизм), paper.
