@@ -34,6 +34,11 @@ BorderSurface {
   property bool flat: false
   // dotmatrix: монохромная карточка #000000 с тонким контуром #2a2a2a и красным LED на critical.
   property bool dotmatrix: false
+  // rumda (по мотивам mako из hexonide/rumda — только облик): песочная карточка светлым акцентом, коричневый
+  // текст, рамка 2 px чуть темнее карточки, моноширинный Terminess.
+  property bool sand: false
+  readonly property string sandFont: Qt.fontFamilies().indexOf("Terminess Nerd Font") !== -1 ? "Terminess Nerd Font" : "monospace"
+  readonly property color ink: sand ? Qt.darker(Commons.Color.accent, 1.55) : Commons.Color.notifications.text
 
   // System monospace font injected by the container.
   property string fontFamily: ""
@@ -54,8 +59,8 @@ BorderSurface {
   readonly property string sanitizedBody: sanitizeBody(body)
   readonly property string styledBody: NotificationLogic.styledBody(body, app, appIcon)
 
-  readonly property color dimColor: Qt.darker(Commons.Color.notifications.text, 1.4)
-  readonly property color bodyColor: Qt.darker(Commons.Color.notifications.text, 1.15)
+  readonly property color dimColor: sand ? Qt.lighter(ink, 1.25) : Qt.darker(Commons.Color.notifications.text, 1.4)
+  readonly property color bodyColor: sand ? ink : Qt.darker(Commons.Color.notifications.text, 1.15)
   readonly property color accentColor: urgency === 2 ? Commons.Color.urgent : (urgency === 0 ? dimColor : Commons.Color.notifications.countdown)
   readonly property var cardBorderSpec: Border.surfaceSpec("notifications", "border", Commons.Color.notifications.border, Math.max(1, Style.space(2)))
 
@@ -76,9 +81,10 @@ BorderSurface {
   // doesn't push content under the bottom edge.
   implicitHeight: mainColumn.implicitHeight + borderTop + borderBottom
   radius: cornerRadius
-  color: dotmatrix ? DotMatrix.Palette.bg : (flat ? Util.alpha(Commons.Color.notifications.text, 0.06) : Commons.Color.notifications.background)
+  color: dotmatrix ? DotMatrix.Palette.bg : sand ? Qt.tint(Commons.Color.accent, Qt.rgba(1, 1, 1, 0.45)) : (flat ? Util.alpha(Commons.Color.notifications.text, 0.06) : Commons.Color.notifications.background)
   borderSpec: dotmatrix
     ? Border.flat(hovered ? DotMatrix.Palette.muted : DotMatrix.Palette.line, 1)
+    : sand ? Border.flat(hovered ? Qt.darker(Commons.Color.accent, 1.1) : Qt.tint(Commons.Color.accent, Qt.rgba(1, 1, 1, 0.22)), 2)
     : (flat ? ({ color: "transparent", widths: cardBorderSpec.widths, gradient: null }) : cardBorderSpec)
   clip: true
 
@@ -217,7 +223,7 @@ BorderSurface {
           anchors.centerIn: parent
           visible: root.hasGlyph && smallIconImage.status !== Image.Ready
           text: root.glyph
-          color: root.dotmatrix ? DotMatrix.Palette.fg : Commons.Color.notifications.text
+          color: root.dotmatrix ? DotMatrix.Palette.fg : root.ink
           font.family: root.fontFamily
           font.pixelSize: Style.font.displayLarge
         }
@@ -228,7 +234,7 @@ BorderSurface {
         Layout.alignment: Qt.AlignVCenter
         visible: root.compactGlyph
         text: root.glyph
-        color: root.dotmatrix ? DotMatrix.Palette.fg : Commons.Color.notifications.text
+        color: root.dotmatrix ? DotMatrix.Palette.fg : root.ink
         font.family: root.fontFamily
         font.pixelSize: Style.font.icon
       }
@@ -247,8 +253,8 @@ BorderSurface {
           Layout.fillWidth: true
           visible: root.summary.length > 0
           text: root.summary
-          font.family: root.dotmatrix ? DotMatrix.Palette.fontTitle : "Liberation Sans"
-          color: root.dotmatrix ? DotMatrix.Palette.fg : Commons.Color.notifications.text
+          font.family: root.dotmatrix ? DotMatrix.Palette.fontTitle : root.sand ? root.sandFont : "Liberation Sans"
+          color: root.dotmatrix ? DotMatrix.Palette.fg : root.ink
           font.pixelSize: root.dotmatrix ? (DotMatrix.Palette.dotLayer ? 17 : 15) : Style.font.title
           font.weight: root.dotmatrix ? DotMatrix.Palette.titleWeight(Font.Medium) : Font.Bold
           wrapMode: Text.WordWrap
@@ -262,7 +268,7 @@ BorderSurface {
           visible: root.sanitizedBody.length > 0
           text: root.styledBody
           textFormat: Text.StyledText
-          font.family: root.dotmatrix ? DotMatrix.Palette.fontSans : "Liberation Sans"
+          font.family: root.dotmatrix ? DotMatrix.Palette.fontSans : root.sand ? root.sandFont : "Liberation Sans"
           color: root.dotmatrix ? DotMatrix.Palette.dim : root.bodyColor
           font.pixelSize: root.dotmatrix ? 13 : Style.font.title
           wrapMode: Text.WordWrap

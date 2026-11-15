@@ -66,7 +66,7 @@ Item {
 
   // drawer: настройки из ~/.config/omarchy/notify-style.json (Customizer → Окна → Уведомления):
   //   notifyStyle drawer|stock, notifyCorner top-right|top-left|top-center, notifyWidth, notifyMax (0 — все),
-  //   notifyCards flat|bordered, notifyFollowBar, notifyAttach auto|attached|floating,
+  //   notifyCards flat|bordered|dotmatrix|rumda, notifyFollowBar, notifyAttach auto|attached|floating,
   //   notifyBackground / notifyAlpha / notifyRadius — когда не следуем бару.
   // drawer — тосты лежат в общей подложке (BarStyle.qml): прилипшей к бару и краю вогнутыми углами
   // (сплошной бар у края) или плавающей карточкой с отступом (прозрачный / «островной» бар).
@@ -79,6 +79,8 @@ Item {
   readonly property string cardStyle: String(cfg("notifyCards", "flat"))
   readonly property bool drawerFlatCards: cardStyle === "flat"
   readonly property bool dotmatrixCards: cardStyle === "dotmatrix"
+  // rumda: песочные карточки как mako у Rumda (обычно со стоковым notifyStyle — без общей подложки)
+  readonly property bool sandCards: cardStyle === "rumda"
   readonly property int drawerPad: 10
   FileView {
     path: service.home + "/.config/omarchy/notify-style.json"
@@ -1287,10 +1289,11 @@ Item {
               image: cardSlot.image
               urgency: cardSlot.urgency
               timestamp: cardSlot.timestamp
-              cornerRadius: service.dotmatrixCards ? Number(service.cfg("notifyRadius", 18)) : service.cornerRadius
+              cornerRadius: service.dotmatrixCards || service.sandCards ? Number(service.cfg("notifyRadius", 18)) : service.cornerRadius
               flat: service.drawerStyle && service.drawerFlatCards
               dotmatrix: service.dotmatrixCards
-              implicitWidth: (service.drawerStyle || service.dotmatrixCards) ? service.drawerWidth : Style.space(380)
+              sand: service.sandCards
+              implicitWidth: (service.drawerStyle || service.dotmatrixCards || service.sandCards) ? service.drawerWidth : Style.space(380)
               fontFamily: service.drawer.look.typeface === "profile" ? service.drawer.fontFamily
                 : service.shell && service.shell.bar ? service.shell.bar.fontFamily : ""
               glyph: cardSlot.glyph

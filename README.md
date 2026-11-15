@@ -52,7 +52,7 @@ Your settings stay in `~/.config/omarchy/notify-style.json`, `~/.config/omarchy/
   "notifyCorner": "top-right",  // top-right | top-left | top-center
   "notifyWidth": 380,
   "notifyMax": 0,               // toasts visible at once; 0 — all (newest on top)
-  "notifyCards": "flat",        // flat | bordered | dotmatrix
+  "notifyCards": "flat",        // flat | bordered | dotmatrix | rumda
   "notifyFollowBar": true,      // colour, alpha, border, radius as the bar
   "notifyAttach": "auto",       // auto | attached | floating
   "notifyBackground": "background", "notifyAlpha": 0.94, "notifyRadius": 18

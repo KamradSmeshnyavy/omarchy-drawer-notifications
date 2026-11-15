@@ -41,7 +41,7 @@ omarchy restart shell
 
 `~/.config/omarchy/notify-style.json`, применяются на лету; [Customizer](https://github.com/KamradSmeshnyavy/omarchy-customizer) —
 Окна → Уведомления. Ключи — в [README.md](README.md#settings): стиль, угол (справа / слева / по центру), ширина,
-сколько тостов видно сразу, вид карточек (`flat` / `bordered` / `dotmatrix`), «следовать стилю бара», режим прилипания, свой фон / альфа / скругление.
+сколько тостов видно сразу, вид карточек (`flat` / `bordered` / `dotmatrix` / `rumda` — песочные карточки как mako у Rumda), «следовать стилю бара», режим прилипания, свой фон / альфа / скругление.
 
 Правки стоковых файлов помечены `// drawer:`.
 
