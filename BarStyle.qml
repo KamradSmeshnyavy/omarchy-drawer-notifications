@@ -52,7 +52,14 @@ QtObject {
   property var fonts: ({})
   readonly property string lookId: String(look.id || "")
   readonly property int elevation: Math.max(0, Math.min(2, Math.round(num(look.elevation, 1))))
-  readonly property bool shadowOn: elevation > 0
+  readonly property bool shadowOn: elevation > 0 && shadowMode === "style"
+  // Тень панелей и виджетов поверх стиля (Customizer → Виджеты → Тени, ~/.config/omarchy/panel-shadow.json):
+  // style — как задумано стилем; hard — жёсткая смещённая тень без размытия у любого материала (как у Bruteon),
+  // со своим смещением и цветом (роль темы или #rrggbb, по умолчанию — цвет текста); off — без теней вовсе.
+  property var shade: ({})
+  readonly property string shadowMode: ["hard", "off"].indexOf(String(shade.panelShadow)) !== -1 ? String(shade.panelShadow) : "style"
+  readonly property int hardOffset: Math.max(1, Math.min(24, Math.round(num(shade.panelShadowOffset, 6))))
+  readonly property color hardColor: resolve(shade.panelShadowColor, inkColor)
   readonly property real shadowOpacity: elevation >= 2 ? 0.55 : 0.4
   readonly property real shadowBlur: elevation >= 2 ? 1.0 : 0.8
   readonly property real lift: elevation          // множитель вертикального сдвига тени
@@ -62,7 +69,8 @@ QtObject {
     ? String(look.material) : "auto"
   readonly property bool paper: material === "paper"
   // Плавающую карточку рисует StyleCard.qml (свой материал), иначе — обычный Rectangle.
-  readonly property bool card: ["paper", "soft", "brutal", "bevel", "glow", "liquid", "pixel"].indexOf(material) !== -1
+  // жёсткая тень (shadowMode "hard") рисуется только карточкой — тогда любой материал идёт через StyleCard
+  readonly property bool card: ["paper", "soft", "brutal", "bevel", "glow", "liquid", "pixel"].indexOf(material) !== -1 || shadowMode === "hard"
   readonly property bool liquid: material === "liquid"
   // Основа темы (как base у тем Vitreus): glass — жидкое стекло; пластиковые — сплошная заливка с контуром и жёсткой
   // тенью вместо стекла: retro (литой пластик), doodle (рисунок от руки), proxy (боевой HUD), milk (неоморфизм), paper.
@@ -159,6 +167,14 @@ QtObject {
     printErrors: false
     onLoaded: { try { style.look = JSON.parse(text() || "{}") || {} } catch (e) { style.look = {} } }
     onLoadFailed: style.look = {}
+    onFileChanged: reload()
+  }
+  property FileView shadeFile: FileView {
+    path: style.home + "/.config/omarchy/panel-shadow.json"
+    watchChanges: true
+    printErrors: false
+    onLoaded: { try { style.shade = JSON.parse(text() || "{}") || {} } catch (e) { style.shade = {} } }
+    onLoadFailed: style.shade = {}
     onFileChanged: reload()
   }
   property FileView fontsFile: FileView {

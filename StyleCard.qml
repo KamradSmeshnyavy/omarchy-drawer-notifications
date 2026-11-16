@@ -104,13 +104,35 @@ Item {
   function shade(c, k) { return Qt.rgba(c.r * k, c.g * k, c.b * k, 1) }
   function lift(c, k) { return Qt.rgba(c.r + (1 - c.r) * k, c.g + (1 - c.g) * k, c.b + (1 - c.b) * k, 1) }
 
+  // ── жёсткая тень: у brutal всегда (6 × 6 цветом текста), у любого материала — при BarStyle.shadowMode "hard"
+  // (своё смещение и цвет, Customizer → Виджеты → Тени); off — без неё. Первой — чтобы лежала под всеми слоями.
+  Rectangle {
+    visible: card.style.shadowMode === "hard" ? card.width > 1 : card.material === "brutal" && card.style.shadowMode !== "off"
+    x: card.style.shadowMode === "hard" ? card.style.hardOffset : 6
+    y: x
+    width: parent.width
+    height: parent.height
+    radius: card.radius
+    color: card.style.shadowMode === "hard" ? card.style.hardColor : card.style.inkColor
+  }
+
+  // ── обычная панель (solid / glass / auto) — только при жёсткой тени: заливка и рамка, как у простой карточки ──
+  Rectangle {
+    visible: ["paper", "soft", "brutal", "bevel", "glow", "liquid", "pixel"].indexOf(card.material) === -1
+    anchors.fill: parent
+    radius: card.radius
+    color: card.style.color
+    border.width: Math.max(1, card.style.borderWidth)
+    border.color: card.style.borderWidth > 0 ? card.style.borderColor : card.style.hardColor
+  }
+
   // ── soft: две тени — тёмная вниз-вправо, светлая вверх-влево ─────────
   Rectangle {
     visible: card.material === "soft"
     anchors.fill: parent
     radius: card.radius
     color: card.style.color
-    layer.enabled: visible && card.width > 1
+    layer.enabled: visible && card.width > 1 && card.style.shadowMode === "style"
     layer.effect: MultiEffect {
       shadowEnabled: true
       shadowColor: card.lift(card.style.color, card.style.darkSurface ? 0.12 : 0.85)
@@ -125,7 +147,7 @@ Item {
     anchors.fill: parent
     radius: card.radius
     color: card.style.color
-    layer.enabled: visible && card.width > 1
+    layer.enabled: visible && card.width > 1 && card.style.shadowMode === "style"
     layer.effect: MultiEffect {
       shadowEnabled: true
       shadowColor: card.shade(card.style.color, card.style.darkSurface ? 0.35 : 0.72)
@@ -139,15 +161,6 @@ Item {
   // ── brutal: жёсткая тень-плашка + толстая рамка ───────────────────────
   Rectangle {
     visible: card.material === "brutal"
-    x: 6
-    y: 6
-    width: parent.width
-    height: parent.height
-    radius: card.radius
-    color: card.style.inkColor
-  }
-  Rectangle {
-    visible: card.material === "brutal"
     anchors.fill: parent
     radius: card.radius
     color: card.style.color
@@ -157,7 +170,7 @@ Item {
 
   // ── pixel (yami): плоская панель, рамка в пиксель, жёсткая тень 3 px ──
   Rectangle {
-    visible: card.material === "pixel"
+    visible: card.material === "pixel" && card.style.shadowMode === "style"
     x: 3; y: 3
     width: parent.width; height: parent.height
     radius: card.radius
