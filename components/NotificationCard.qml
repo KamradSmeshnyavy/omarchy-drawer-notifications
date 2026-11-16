@@ -37,8 +37,14 @@ BorderSurface {
   // rumda (по мотивам mako из hexonide/rumda — только облик): песочная карточка светлым акцентом, коричневый
   // текст, рамка 2 px чуть темнее карточки, моноширинный Terminess.
   property bool sand: false
+  // nier (по мотивам уведомлений Unit-3, samyns — MIT, widgets/Notifications.qml): бежевый лист NieR #d6cfb5 с рамкой
+  // чернилами, полоса важности 3 px слева, шапка — плашка NOTICE / CRITICAL / INFO с японской подписью, имя приложения,
+  // время и квадрат ✕; заголовок и текст чернилами, Share Tech Mono.
+  property bool nier: false
+  readonly property color nierAcc: urgency === 2 ? "#6e2a2a" : urgency === 0 ? "#7a7358" : "#463f2e"
+  readonly property string nierFont: Qt.fontFamilies().indexOf("Share Tech Mono") !== -1 ? "Share Tech Mono" : "monospace"
   readonly property string sandFont: Qt.fontFamilies().indexOf("Terminess Nerd Font") !== -1 ? "Terminess Nerd Font" : "monospace"
-  readonly property color ink: sand ? Qt.darker(Commons.Color.accent, 1.55) : Commons.Color.notifications.text
+  readonly property color ink: nier ? "#2e2a1f" : sand ? Qt.darker(Commons.Color.accent, 1.55) : Commons.Color.notifications.text
 
   // System monospace font injected by the container.
   property string fontFamily: ""
@@ -59,8 +65,8 @@ BorderSurface {
   readonly property string sanitizedBody: sanitizeBody(body)
   readonly property string styledBody: NotificationLogic.styledBody(body, app, appIcon)
 
-  readonly property color dimColor: sand ? Qt.lighter(ink, 1.25) : Qt.darker(Commons.Color.notifications.text, 1.4)
-  readonly property color bodyColor: sand ? ink : Qt.darker(Commons.Color.notifications.text, 1.15)
+  readonly property color dimColor: nier ? "#7a7358" : sand ? Qt.lighter(ink, 1.25) : Qt.darker(Commons.Color.notifications.text, 1.4)
+  readonly property color bodyColor: nier ? "#463f2e" : sand ? ink : Qt.darker(Commons.Color.notifications.text, 1.15)
   readonly property color accentColor: urgency === 2 ? Commons.Color.urgent : (urgency === 0 ? dimColor : Commons.Color.notifications.countdown)
   readonly property var cardBorderSpec: Border.surfaceSpec("notifications", "border", Commons.Color.notifications.border, Math.max(1, Style.space(2)))
 
@@ -81,14 +87,15 @@ BorderSurface {
   // doesn't push content under the bottom edge.
   implicitHeight: mainColumn.implicitHeight + borderTop + borderBottom
   radius: cornerRadius
-  color: dotmatrix ? DotMatrix.Palette.bg : sand ? Qt.tint(Commons.Color.accent, Qt.rgba(1, 1, 1, 0.45)) : (flat ? Util.alpha(Commons.Color.notifications.text, 0.06) : Commons.Color.notifications.background)
-  borderSpec: dotmatrix
+  color: nier ? "#d6cfb5" : dotmatrix ? DotMatrix.Palette.bg : sand ? Qt.tint(Commons.Color.accent, Qt.rgba(1, 1, 1, 0.45)) : (flat ? Util.alpha(Commons.Color.notifications.text, 0.06) : Commons.Color.notifications.background)
+  borderSpec: nier ? Border.flat("#463f2e", 1) : dotmatrix
     ? Border.flat(hovered ? DotMatrix.Palette.muted : DotMatrix.Palette.line, 1)
     : sand ? Border.flat(hovered ? Qt.darker(Commons.Color.accent, 1.1) : Qt.tint(Commons.Color.accent, Qt.rgba(1, 1, 1, 0.22)), 2)
     : (flat ? ({ color: "transparent", widths: cardBorderSpec.widths, gradient: null }) : cardBorderSpec)
   clip: true
 
   HoverHandler { id: hoverTracker }
+  Rectangle { visible: root.nier; x: 1; y: 1; width: 3; height: root.height - 2; color: root.nierAcc; z: 5 }
 
   MouseArea {
     anchors.fill: parent
@@ -114,6 +121,38 @@ BorderSurface {
     anchors.leftMargin: root.borderLeft
     anchors.rightMargin: root.borderRight
     spacing: 0
+
+    // nier: шапка — плашка важности, японская подпись, приложение, время, квадрат ✕
+    RowLayout {
+      visible: root.nier
+      Layout.fillWidth: true
+      Layout.leftMargin: Style.space(16)
+      Layout.rightMargin: Style.space(10)
+      Layout.topMargin: Style.space(10)
+      spacing: 8
+      Rectangle {
+        Layout.preferredWidth: nierTag.implicitWidth + 10
+        Layout.preferredHeight: 14
+        color: root.nierAcc
+        Text { id: nierTag; anchors.centerIn: parent; text: root.urgency === 2 ? "CRITICAL" : root.urgency === 0 ? "INFO" : "NOTICE"; color: "#d6cfb5"; font.family: root.nierFont; font.pixelSize: 8; font.letterSpacing: 2 }
+      }
+      Text { text: root.urgency === 2 ? "緊急" : root.urgency === 0 ? "情報" : "通知"; color: "#7a7358"; font.pixelSize: 9 }
+      Text {
+        Layout.fillWidth: true
+        textFormat: Text.PlainText
+        elide: Text.ElideRight
+        text: (root.app.length > 0 ? root.app : "SYSTEM").toUpperCase()
+        color: "#7a7358"; font.family: root.nierFont; font.pixelSize: 8; font.letterSpacing: 2
+      }
+      Text { text: root.timestamp > 0 ? Qt.formatTime(new Date(root.timestamp), "HH:mm") : ""; color: "#7a7358"; font.family: root.nierFont; font.pixelSize: 8; font.letterSpacing: 1 }
+      Rectangle {
+        Layout.preferredWidth: 16; Layout.preferredHeight: 16
+        color: nierClose.containsMouse ? root.nierAcc : "transparent"
+        border.color: "#463f2e"; border.width: 1
+        Text { anchors.centerIn: parent; text: "✕"; color: nierClose.containsMouse ? "#d6cfb5" : "#463f2e"; font.family: root.nierFont; font.pixelSize: 9 }
+        MouseArea { id: nierClose; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.closeRequested() }
+      }
+    }
 
     // DOT-MATRIX metadata header: 6x6 red LED on critical, monochrome app icon, uppercase Space Mono app name, close glyph.
     RowLayout {
@@ -253,7 +292,7 @@ BorderSurface {
           Layout.fillWidth: true
           visible: root.summary.length > 0
           text: root.summary
-          font.family: root.dotmatrix ? DotMatrix.Palette.fontTitle : root.sand ? root.sandFont : "Liberation Sans"
+          font.family: root.dotmatrix ? DotMatrix.Palette.fontTitle : root.nier ? root.nierFont : root.sand ? root.sandFont : "Liberation Sans"
           color: root.dotmatrix ? DotMatrix.Palette.fg : root.ink
           font.pixelSize: root.dotmatrix ? (DotMatrix.Palette.dotLayer ? 17 : 15) : Style.font.title
           font.weight: root.dotmatrix ? DotMatrix.Palette.titleWeight(Font.Medium) : Font.Bold
@@ -268,7 +307,7 @@ BorderSurface {
           visible: root.sanitizedBody.length > 0
           text: root.styledBody
           textFormat: Text.StyledText
-          font.family: root.dotmatrix ? DotMatrix.Palette.fontSans : root.sand ? root.sandFont : "Liberation Sans"
+          font.family: root.dotmatrix ? DotMatrix.Palette.fontSans : root.nier ? root.nierFont : root.sand ? root.sandFont : "Liberation Sans"
           color: root.dotmatrix ? DotMatrix.Palette.dim : root.bodyColor
           font.pixelSize: root.dotmatrix ? 13 : Style.font.title
           wrapMode: Text.WordWrap

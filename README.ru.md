@@ -43,6 +43,8 @@ omarchy restart shell
 Окна → Уведомления. Ключи — в [README.md](README.md#settings): стиль, угол (справа / слева / по центру), ширина,
 сколько тостов видно сразу, вид карточек (`flat` / `bordered` / `dotmatrix` / `rumda` — песочные карточки как mako у Rumda), «следовать стилю бара», режим прилипания, свой фон / альфа / скругление.
 
+`"notifyCards": "nier"` — карточки NieR по мотивам уведомлений [Unit-3](https://github.com/samyns/Unit-3) (MIT): бежевый лист с рамкой чернилами, полоса важности 3 px слева, плашка NOTICE / CRITICAL / INFO с японским словом, приложение, время и квадрат ✕; Share Tech Mono.
+
 Правки стоковых файлов помечены `// drawer:`.
 
 **Токены стиля.** `~/.config/omarchy/style.json` (пишет
