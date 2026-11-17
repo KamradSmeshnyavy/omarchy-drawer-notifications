@@ -43,6 +43,11 @@ BorderSurface {
   property bool nier: false
   readonly property color nierAcc: urgency === 2 ? "#6e2a2a" : urgency === 0 ? "#7a7358" : "#463f2e"
   readonly property string nierFont: Qt.fontFamilies().indexOf("Share Tech Mono") !== -1 ? "Share Tech Mono" : "monospace"
+  // space (по мотивам стиля Space из elifouts/Dotfiles, GPL-3.0): плашка HUD — фон темы 78 %, рамка акцентом 35 %,
+  // черта 2 px акцентом слева, уголки 7 px; шапка «NOTICE // ПРИЛОЖЕНИЕ», время и ✕ капсом вразрядку.
+  property bool hud: false
+  readonly property string hudFont: Qt.fontFamilies().indexOf("JetBrainsMono Nerd Font") !== -1 ? "JetBrainsMono Nerd Font" : "monospace"
+  readonly property color hudAcc: urgency === 2 ? Commons.Color.urgent : Commons.Color.accent
   readonly property string sandFont: Qt.fontFamilies().indexOf("Terminess Nerd Font") !== -1 ? "Terminess Nerd Font" : "monospace"
   readonly property color ink: nier ? "#2e2a1f" : sand ? Qt.darker(Commons.Color.accent, 1.55) : Commons.Color.notifications.text
 
@@ -87,8 +92,8 @@ BorderSurface {
   // doesn't push content under the bottom edge.
   implicitHeight: mainColumn.implicitHeight + borderTop + borderBottom
   radius: cornerRadius
-  color: nier ? "#d6cfb5" : dotmatrix ? DotMatrix.Palette.bg : sand ? Qt.tint(Commons.Color.accent, Qt.rgba(1, 1, 1, 0.45)) : (flat ? Util.alpha(Commons.Color.notifications.text, 0.06) : Commons.Color.notifications.background)
-  borderSpec: nier ? Border.flat("#463f2e", 1) : dotmatrix
+  color: hud ? Util.alpha(Commons.Color.background, 0.78) : nier ? "#d6cfb5" : dotmatrix ? DotMatrix.Palette.bg : sand ? Qt.tint(Commons.Color.accent, Qt.rgba(1, 1, 1, 0.45)) : (flat ? Util.alpha(Commons.Color.notifications.text, 0.06) : Commons.Color.notifications.background)
+  borderSpec: hud ? Border.flat(Util.alpha(hudAcc, 0.35), 1) : nier ? Border.flat("#463f2e", 1) : dotmatrix
     ? Border.flat(hovered ? DotMatrix.Palette.muted : DotMatrix.Palette.line, 1)
     : sand ? Border.flat(hovered ? Qt.darker(Commons.Color.accent, 1.1) : Qt.tint(Commons.Color.accent, Qt.rgba(1, 1, 1, 0.22)), 2)
     : (flat ? ({ color: "transparent", widths: cardBorderSpec.widths, gradient: null }) : cardBorderSpec)
@@ -96,6 +101,20 @@ BorderSurface {
 
   HoverHandler { id: hoverTracker }
   Rectangle { visible: root.nier; x: 1; y: 1; width: 3; height: root.height - 2; color: root.nierAcc; z: 5 }
+  // space: черта акцентом слева и уголки
+  Rectangle { visible: root.hud; x: 0; y: 7; width: 2; height: root.height - 7; color: root.hudAcc; z: 5 }
+  Repeater {
+    model: root.hud ? 4 : 0
+    Item {
+      required property int index
+      z: 6
+      x: index % 2 ? root.width - 7 : 0
+      y: index > 1 ? root.height - 7 : 0
+      width: 7; height: 7
+      Rectangle { width: 7; height: 1; y: parent.index > 1 ? 6 : 0; color: root.hudAcc }
+      Rectangle { width: 1; height: 7; x: parent.index % 2 ? 6 : 0; color: root.hudAcc }
+    }
+  }
 
   MouseArea {
     anchors.fill: parent
@@ -151,6 +170,30 @@ BorderSurface {
         border.color: "#463f2e"; border.width: 1
         Text { anchors.centerIn: parent; text: "✕"; color: nierClose.containsMouse ? "#d6cfb5" : "#463f2e"; font.family: root.nierFont; font.pixelSize: 9 }
         MouseArea { id: nierClose; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.closeRequested() }
+      }
+    }
+
+    // space: шапка HUD
+    RowLayout {
+      visible: root.hud
+      Layout.fillWidth: true
+      Layout.leftMargin: Style.space(14)
+      Layout.rightMargin: Style.space(10)
+      Layout.topMargin: Style.space(9)
+      spacing: 8
+      Text {
+        Layout.fillWidth: true
+        textFormat: Text.PlainText
+        elide: Text.ElideRight
+        text: (root.urgency === 2 ? "CRITICAL" : root.urgency === 0 ? "INFO" : "NOTICE") + "  //  " + (root.app.length > 0 ? root.app : "SYSTEM").toUpperCase()
+        color: Util.alpha(root.hudAcc, 0.85); font.family: root.hudFont; font.pixelSize: 9; font.letterSpacing: 1.6
+      }
+      Text { text: root.timestamp > 0 ? Qt.formatTime(new Date(root.timestamp), "HH:mm") : ""; color: Util.alpha(Commons.Color.foreground, 0.45); font.family: root.hudFont; font.pixelSize: 9; font.letterSpacing: 1.6 }
+      Text {
+        text: "✕"
+        color: hudClose.containsMouse ? root.hudAcc : Util.alpha(Commons.Color.foreground, 0.5)
+        font.family: root.hudFont; font.pixelSize: 10
+        MouseArea { id: hudClose; anchors.fill: parent; anchors.margins: -5; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.closeRequested() }
       }
     }
 
@@ -221,9 +264,9 @@ BorderSurface {
     // Text content.
     RowLayout {
       Layout.fillWidth: true
-      Layout.leftMargin: Style.space(root.dotmatrix ? 14 : 12)
+      Layout.leftMargin: Style.space(root.dotmatrix || root.hud ? 14 : 12)
       Layout.rightMargin: Style.space(12)
-      Layout.topMargin: root.dotmatrix ? Style.space(6) : (root.singleLineToast ? Style.space(7) : Style.space(10))
+      Layout.topMargin: root.dotmatrix || root.hud ? Style.space(6) : (root.singleLineToast ? Style.space(7) : Style.space(10))
       Layout.bottomMargin: root.dotmatrix ? Style.space(12) : (root.singleLineToast ? Style.space(7) : Style.space(10))
       spacing: root.collapseRedundantIcon ? 0 : (root.compactGlyph ? Style.space(8) : Style.space(12))
 
@@ -292,7 +335,7 @@ BorderSurface {
           Layout.fillWidth: true
           visible: root.summary.length > 0
           text: root.summary
-          font.family: root.dotmatrix ? DotMatrix.Palette.fontTitle : root.nier ? root.nierFont : root.sand ? root.sandFont : "Liberation Sans"
+          font.family: root.dotmatrix ? DotMatrix.Palette.fontTitle : root.nier ? root.nierFont : root.hud ? root.hudFont : root.sand ? root.sandFont : "Liberation Sans"
           color: root.dotmatrix ? DotMatrix.Palette.fg : root.ink
           font.pixelSize: root.dotmatrix ? (DotMatrix.Palette.dotLayer ? 17 : 15) : Style.font.title
           font.weight: root.dotmatrix ? DotMatrix.Palette.titleWeight(Font.Medium) : Font.Bold
@@ -307,7 +350,7 @@ BorderSurface {
           visible: root.sanitizedBody.length > 0
           text: root.styledBody
           textFormat: Text.StyledText
-          font.family: root.dotmatrix ? DotMatrix.Palette.fontSans : root.nier ? root.nierFont : root.sand ? root.sandFont : "Liberation Sans"
+          font.family: root.dotmatrix ? DotMatrix.Palette.fontSans : root.nier ? root.nierFont : root.hud ? root.hudFont : root.sand ? root.sandFont : "Liberation Sans"
           color: root.dotmatrix ? DotMatrix.Palette.dim : root.bodyColor
           font.pixelSize: root.dotmatrix ? 13 : Style.font.title
           wrapMode: Text.WordWrap
