@@ -48,6 +48,12 @@ BorderSurface {
   property bool hud: false
   readonly property string hudFont: Qt.fontFamilies().indexOf("JetBrainsMono Nerd Font") !== -1 ? "JetBrainsMono Nerd Font" : "monospace"
   readonly property color hudAcc: urgency === 2 ? Commons.Color.urgent : Commons.Color.accent
+  // crt (по мотивам стиля Retro из elifouts/Dotfiles, GPL-3.0; retro/notify-default.png): фон темы, рамка 1 px цветом
+  // трубки на 45 %, Terminess, внизу «ПРИЛОЖЕНИЕ · ВРЕМЯ» тускло и полоска 3 px акцентом, тающая за 6 с (под мышью — стоит).
+  property bool retro: false
+  readonly property string retroFont: Qt.fontFamilies().indexOf("Terminess Nerd Font Mono") !== -1 ? "Terminess Nerd Font Mono" : "monospace"
+  property real retroLeft: 1
+  NumberAnimation on retroLeft { running: root.retro; paused: running && root.hovered; to: 0; duration: 6000 }
   readonly property string sandFont: Qt.fontFamilies().indexOf("Terminess Nerd Font") !== -1 ? "Terminess Nerd Font" : "monospace"
   readonly property color ink: nier ? "#2e2a1f" : sand ? Qt.darker(Commons.Color.accent, 1.55) : Commons.Color.notifications.text
 
@@ -92,8 +98,8 @@ BorderSurface {
   // doesn't push content under the bottom edge.
   implicitHeight: mainColumn.implicitHeight + borderTop + borderBottom
   radius: cornerRadius
-  color: hud ? Util.alpha(Commons.Color.background, 0.78) : nier ? "#d6cfb5" : dotmatrix ? DotMatrix.Palette.bg : sand ? Qt.tint(Commons.Color.accent, Qt.rgba(1, 1, 1, 0.45)) : (flat ? Util.alpha(Commons.Color.notifications.text, 0.06) : Commons.Color.notifications.background)
-  borderSpec: hud ? Border.flat(Util.alpha(hudAcc, 0.35), 1) : nier ? Border.flat("#463f2e", 1) : dotmatrix
+  color: retro ? Util.alpha(Commons.Color.background, 0.94) : hud ? Util.alpha(Commons.Color.background, 0.78) : nier ? "#d6cfb5" : dotmatrix ? DotMatrix.Palette.bg : sand ? Qt.tint(Commons.Color.accent, Qt.rgba(1, 1, 1, 0.45)) : (flat ? Util.alpha(Commons.Color.notifications.text, 0.06) : Commons.Color.notifications.background)
+  borderSpec: retro ? Border.flat(Util.alpha(hudAcc, 0.45), 1) : hud ? Border.flat(Util.alpha(hudAcc, 0.35), 1) : nier ? Border.flat("#463f2e", 1) : dotmatrix
     ? Border.flat(hovered ? DotMatrix.Palette.muted : DotMatrix.Palette.line, 1)
     : sand ? Border.flat(hovered ? Qt.darker(Commons.Color.accent, 1.1) : Qt.tint(Commons.Color.accent, Qt.rgba(1, 1, 1, 0.22)), 2)
     : (flat ? ({ color: "transparent", widths: cardBorderSpec.widths, gradient: null }) : cardBorderSpec)
@@ -101,6 +107,8 @@ BorderSurface {
 
   HoverHandler { id: hoverTracker }
   Rectangle { visible: root.nier; x: 1; y: 1; width: 3; height: root.height - 2; color: root.nierAcc; z: 5 }
+  // crt: полоска-таймер акцентом внизу
+  Rectangle { visible: root.retro; x: 10; y: root.height - 8; width: (root.width - 20) * root.retroLeft; height: 3; color: root.hudAcc; z: 5 }
   // space: черта акцентом слева и уголки
   Rectangle { visible: root.hud; x: 0; y: 7; width: 2; height: root.height - 7; color: root.hudAcc; z: 5 }
   Repeater {
@@ -267,7 +275,7 @@ BorderSurface {
       Layout.leftMargin: Style.space(root.dotmatrix || root.hud ? 14 : 12)
       Layout.rightMargin: Style.space(12)
       Layout.topMargin: root.dotmatrix || root.hud ? Style.space(6) : (root.singleLineToast ? Style.space(7) : Style.space(10))
-      Layout.bottomMargin: root.dotmatrix ? Style.space(12) : (root.singleLineToast ? Style.space(7) : Style.space(10))
+      Layout.bottomMargin: root.dotmatrix || root.retro ? Style.space(14) : (root.singleLineToast ? Style.space(7) : Style.space(10))
       spacing: root.collapseRedundantIcon ? 0 : (root.compactGlyph ? Style.space(8) : Style.space(12))
 
       Item {
@@ -335,7 +343,7 @@ BorderSurface {
           Layout.fillWidth: true
           visible: root.summary.length > 0
           text: root.summary
-          font.family: root.dotmatrix ? DotMatrix.Palette.fontTitle : root.nier ? root.nierFont : root.hud ? root.hudFont : root.sand ? root.sandFont : "Liberation Sans"
+          font.family: root.dotmatrix ? DotMatrix.Palette.fontTitle : root.nier ? root.nierFont : root.retro ? root.retroFont : root.hud ? root.hudFont : root.sand ? root.sandFont : "Liberation Sans"
           color: root.dotmatrix ? DotMatrix.Palette.fg : root.ink
           font.pixelSize: root.dotmatrix ? (DotMatrix.Palette.dotLayer ? 17 : 15) : Style.font.title
           font.weight: root.dotmatrix ? DotMatrix.Palette.titleWeight(Font.Medium) : Font.Bold
@@ -350,12 +358,22 @@ BorderSurface {
           visible: root.sanitizedBody.length > 0
           text: root.styledBody
           textFormat: Text.StyledText
-          font.family: root.dotmatrix ? DotMatrix.Palette.fontSans : root.nier ? root.nierFont : root.hud ? root.hudFont : root.sand ? root.sandFont : "Liberation Sans"
+          font.family: root.dotmatrix ? DotMatrix.Palette.fontSans : root.nier ? root.nierFont : root.retro ? root.retroFont : root.hud ? root.hudFont : root.sand ? root.sandFont : "Liberation Sans"
           color: root.dotmatrix ? DotMatrix.Palette.dim : root.bodyColor
           font.pixelSize: root.dotmatrix ? 13 : Style.font.title
           wrapMode: Text.WordWrap
           elide: Text.ElideRight
           maximumLineCount: 3
+        }
+        // crt: «ПРИЛОЖЕНИЕ · ВРЕМЯ» тускло
+        Text {
+          Layout.fillWidth: true
+          visible: root.retro
+          text: (root.app.length > 0 ? root.app : "system") + "  ·  " + (root.timestamp > 0 ? Qt.formatTime(new Date(root.timestamp), "HH:mm") : "now")
+          font.family: root.retroFont
+          font.pixelSize: 12
+          color: Util.alpha(Commons.Color.foreground, 0.5)
+          elide: Text.ElideRight
         }
       }
     }

@@ -66,7 +66,7 @@ Item {
 
   // drawer: настройки из ~/.config/omarchy/notify-style.json (Customizer → Окна → Уведомления):
   //   notifyStyle drawer|stock, notifyCorner top-right|top-left|top-center, notifyWidth, notifyMax (0 — все),
-  //   notifyCards flat|bordered|dotmatrix|rumda|nier|space, notifyFollowBar, notifyAttach auto|attached|floating,
+  //   notifyCards flat|bordered|dotmatrix|rumda|nier|space|crt, notifyFollowBar, notifyAttach auto|attached|floating,
   //   notifyBackground / notifyAlpha / notifyRadius — когда не следуем бару.
   // drawer — тосты лежат в общей подложке (BarStyle.qml): прилипшей к бару и краю вогнутыми углами
   // (сплошной бар у края) или плавающей карточкой с отступом (прозрачный / «островной» бар).
@@ -85,6 +85,8 @@ Item {
   readonly property bool nierCards: cardStyle === "nier"
   // space: плашки HUD из стиля Space (elifouts/Dotfiles)
   readonly property bool spaceCards: cardStyle === "space"
+  // crt: рамка цветом трубки и тающая полоска из стиля Retro (elifouts/Dotfiles)
+  readonly property bool crtCards: cardStyle === "crt"
   readonly property int drawerPad: 10
   FileView {
     path: service.home + "/.config/omarchy/notify-style.json"
@@ -1299,6 +1301,7 @@ Item {
               sand: service.sandCards
               nier: service.nierCards
               hud: service.spaceCards
+              retro: service.crtCards
               implicitWidth: (service.drawerStyle || service.dotmatrixCards || service.sandCards) ? service.drawerWidth : Style.space(380)
               fontFamily: service.drawer.look.typeface === "profile" ? service.drawer.fontFamily
                 : service.shell && service.shell.bar ? service.shell.bar.fontFamily : ""
