@@ -65,8 +65,8 @@ Item {
   }
 
   // drawer: настройки из ~/.config/omarchy/notify-style.json (Customizer → Окна → Уведомления):
-  //   notifyStyle drawer|stock, notifyCorner top-right|top-left|top-center, notifyWidth, notifyMax (0 — все),
-  //   notifyCards flat|bordered|dotmatrix|rumda|nier|space|crt, notifyFollowBar, notifyAttach auto|attached|floating,
+  //   notifyStyle drawer|stock, notifyCorner top-right|top-left|top-center (stock — ещё bottom-left|bottom-right), notifyWidth, notifyMax (0 — все),
+  //   notifyCards flat|bordered|dotmatrix|rumda|nier|space|crt|modern, notifyFollowBar, notifyAttach auto|attached|floating,
   //   notifyBackground / notifyAlpha / notifyRadius — когда не следуем бару.
   // drawer — тосты лежат в общей подложке (BarStyle.qml): прилипшей к бару и краю вогнутыми углами
   // (сплошной бар у края) или плавающей карточкой с отступом (прозрачный / «островной» бар).
@@ -87,6 +87,8 @@ Item {
   readonly property bool spaceCards: cardStyle === "space"
   // crt: рамка цветом трубки и тающая полоска из стиля Retro (elifouts/Dotfiles)
   readonly property bool crtCards: cardStyle === "crt"
+  // modern: карточка Modern из elifouts/Dotfiles — как crt, но шрифт и скругления стиля
+  readonly property bool modernCards: cardStyle === "modern"
   readonly property int drawerPad: 10
   FileView {
     path: service.home + "/.config/omarchy/notify-style.json"
@@ -1226,8 +1228,13 @@ Item {
       ColumnLayout {
         id: popupColumn
         // drawer: внутри подложки; stock — стоковое место у правого верхнего угла.
-        x: service.drawerStyle ? popupWindow.bodyX + service.drawerPad : popupWindow.width - width - popupWindow.popupPlacement.margins.right
-        y: service.drawerStyle ? popupWindow.bodyY + service.drawerPad : popupWindow.popupPlacement.margins.top
+        // stock: угол notifyCorner — справа / слева, сверху / снизу (bottom-left — у Modern, как у elifouts)
+        x: service.drawerStyle ? popupWindow.bodyX + service.drawerPad
+          : service.drawerCorner.indexOf("left") !== -1 ? popupWindow.popupPlacement.margins.left
+          : popupWindow.width - width - popupWindow.popupPlacement.margins.right
+        y: service.drawerStyle ? popupWindow.bodyY + service.drawerPad
+          : service.drawerCorner.indexOf("bottom") === 0 ? popupWindow.height - height - popupWindow.popupPlacement.margins.bottom
+          : popupWindow.popupPlacement.margins.top
         spacing: Style.space(8)
 
         Repeater {
@@ -1252,7 +1259,7 @@ Item {
             // Each card sizes itself based on mode (text vs media); the slot
             // tracks the card so the column auto-fits to whichever is widest.
             Layout.preferredWidth: card.implicitWidth
-            Layout.alignment: service.drawerStyle && service.drawerCorner === "top-left" ? Qt.AlignLeft : Qt.AlignRight
+            Layout.alignment: service.drawerCorner.indexOf("left") !== -1 ? Qt.AlignLeft : Qt.AlignRight
             // drawer: не больше notifyMax тостов сразу (новые — сверху; остальные ждут своей очереди).
             visible: !service.drawerStyle || service.drawerMax === 0 || index < service.drawerMax
             implicitHeight: card.implicitHeight
@@ -1301,7 +1308,8 @@ Item {
               sand: service.sandCards
               nier: service.nierCards
               hud: service.spaceCards
-              retro: service.crtCards
+              retro: service.crtCards || service.modernCards
+              modern: service.modernCards
               implicitWidth: (service.drawerStyle || service.dotmatrixCards || service.sandCards) ? service.drawerWidth : Style.space(380)
               fontFamily: service.drawer.look.typeface === "profile" ? service.drawer.fontFamily
                 : service.shell && service.shell.bar ? service.shell.bar.fontFamily : ""

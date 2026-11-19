@@ -51,7 +51,11 @@ BorderSurface {
   // crt (по мотивам стиля Retro из elifouts/Dotfiles, GPL-3.0; retro/notify-default.png): фон темы, рамка 1 px цветом
   // трубки на 45 %, Terminess, внизу «ПРИЛОЖЕНИЕ · ВРЕМЯ» тускло и полоска 3 px акцентом, тающая за 6 с (под мышью — стоит).
   property bool retro: false
-  readonly property string retroFont: Qt.fontFamilies().indexOf("Terminess Nerd Font Mono") !== -1 ? "Terminess Nerd Font Mono" : "monospace"
+  // modern (по мотивам стиля Modern из elifouts/Dotfiles; v2/notify-default.png): та же карточка с рамкой акцентом,
+  // строкой «приложение · время» и тающей полоской, но шрифт Code New Roman и скругления стиля
+  property bool modern: false
+  readonly property string retroFont: modern ? (Qt.fontFamilies().indexOf("CodeNewRoman Nerd Font Propo") !== -1 ? "CodeNewRoman Nerd Font Propo" : "JetBrainsMono Nerd Font")
+    : Qt.fontFamilies().indexOf("Terminess Nerd Font Mono") !== -1 ? "Terminess Nerd Font Mono" : "monospace"
   property real retroLeft: 1
   NumberAnimation on retroLeft { running: root.retro; paused: running && root.hovered; to: 0; duration: 6000 }
   readonly property string sandFont: Qt.fontFamilies().indexOf("Terminess Nerd Font") !== -1 ? "Terminess Nerd Font" : "monospace"
@@ -108,7 +112,7 @@ BorderSurface {
   HoverHandler { id: hoverTracker }
   Rectangle { visible: root.nier; x: 1; y: 1; width: 3; height: root.height - 2; color: root.nierAcc; z: 5 }
   // crt: полоска-таймер акцентом внизу
-  Rectangle { visible: root.retro; x: 10; y: root.height - 8; width: (root.width - 20) * root.retroLeft; height: 3; color: root.hudAcc; z: 5 }
+  Rectangle { visible: root.retro; x: root.modern ? 22 : 10; y: root.height - (root.modern ? 10 : 8); width: (root.width - (root.modern ? 44 : 20)) * root.retroLeft; height: 3; radius: root.modern ? 1.5 : 0; color: root.hudAcc; z: 5 }
   // space: черта акцентом слева и уголки
   Rectangle { visible: root.hud; x: 0; y: 7; width: 2; height: root.height - 7; color: root.hudAcc; z: 5 }
   Repeater {
