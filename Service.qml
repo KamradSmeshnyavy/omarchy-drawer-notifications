@@ -87,6 +87,16 @@ Item {
   readonly property bool spaceCards: cardStyle === "space"
   // crt: рамка цветом трубки и тающая полоска из стиля Retro (elifouts/Dotfiles)
   readonly property bool crtCards: cardStyle === "crt"
+  // пока идёт переход смены райса (Customizer scripts/rice-transition.sh пишет 1 / 0), тосты не показываются:
+  // оверлей перехода не может лечь поверх слоёв, созданных после него
+  FileView {
+    id: transitionFlag
+    path: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/omarchy-rice-transition"
+    watchChanges: true
+    printErrors: false
+    onFileChanged: reload()
+  }
+  readonly property bool riceTransition: transitionFlag.text().trim() === "1"
   // modern: карточка Modern из elifouts/Dotfiles — как crt, но шрифт и скругления стиля
   readonly property bool modernCards: cardStyle === "modern"
   readonly property int drawerPad: 10
@@ -1066,7 +1076,7 @@ Item {
       // drawer: окно живёт, пока подложка не досворачивается.
       // drawer: пока открыто меню Super+M (в нём та же история), тосты не показываются — как в NIHIL;
       // таймеры идут, свежие появятся после закрытия меню.
-      visible: (popupModel.count > 0 || h > 0.5) && !service.settingsOpen
+      visible: (popupModel.count > 0 || h > 0.5) && !service.settingsOpen && !service.riceTransition
 
       WlrLayershell.namespace: "omarchy-notifications"
       WlrLayershell.layer: WlrLayer.Overlay
