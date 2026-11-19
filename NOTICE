@@ -9,3 +9,6 @@ Third-party attributions for kamradsmeshnyavy.notifications:
   Adapted from Nihil-Shell (https://github.com/poligle/Nihil-Shell)
   Copyright (c) 2026 Pol Iglesias
   Licensed under the MIT License.
+
+- Modern notification cards (`notifyCards: "modern"`): own code, design after the Modern style of
+  elifouts/Dotfiles (https://github.com/elifouts/Dotfiles), GPL-3.0.

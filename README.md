@@ -61,6 +61,8 @@ Your settings stay in `~/.config/omarchy/notify-style.json`, `~/.config/omarchy/
 
 `"notifyCards": "nier"` — NieR cards after the notifications of [Unit-3](https://github.com/samyns/Unit-3) (MIT): a beige sheet with an ink border, a 3 px urgency stripe on the left, a NOTICE / CRITICAL / INFO tag with a Japanese word, the app, the time and a ✕ square; Share Tech Mono.
 
+`"notifyCards": "modern"` — cards after the Modern style of [elifouts/Dotfiles](https://github.com/elifouts/Dotfiles) (GPL-3.0): an accent-bordered card, the summary, the body, «app · time» and a fading progress line; Code New Roman. With `notifyStyle: stock` the corner can also be `bottom-left` / `bottom-right` (Modern and Space use bottom-left).
+
 **Style tokens.** `~/.config/omarchy/style.json` (written by
 [omarchy-customizer](https://github.com/KamradSmeshnyavy/omarchy-customizer) → Presets → Style) tunes the panels on top
 of the bar: `elevation` 0–2 (shadows), `motion` (animation speed multiplier, 0 — none), `material`

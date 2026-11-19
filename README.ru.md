@@ -45,6 +45,8 @@ omarchy restart shell
 
 `"notifyCards": "nier"` — карточки NieR по мотивам уведомлений [Unit-3](https://github.com/samyns/Unit-3) (MIT): бежевый лист с рамкой чернилами, полоса важности 3 px слева, плашка NOTICE / CRITICAL / INFO с японским словом, приложение, время и квадрат ✕; Share Tech Mono.
 
+`"notifyCards": "modern"` — карточки по мотивам стиля Modern из [elifouts/Dotfiles](https://github.com/elifouts/Dotfiles) (GPL-3.0): рамка акцентом, заголовок, текст, «приложение · время» и тающая полоска; Code New Roman. При `notifyStyle: stock` угол может быть и `bottom-left` / `bottom-right` (у Modern и Space — снизу слева).
+
 Правки стоковых файлов помечены `// drawer:`.
 
 **Токены стиля.** `~/.config/omarchy/style.json` (пишет
