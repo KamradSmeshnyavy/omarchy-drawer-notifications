@@ -83,7 +83,7 @@ QtObject {
   // Пишет пресет (style.json base); без него — glass.
   readonly property string base: ["glass", "obsidian", "retro", "uwu", "milk", "paper", "doodle", "cyber", "proxy"].indexOf(String(look.base)) !== -1
     ? String(look.base) : "glass"
-  readonly property bool plastic: liquid && ["retro", "doodle", "proxy", "milk", "paper"].indexOf(base) !== -1
+  readonly property bool plastic: liquid && ["retro", "doodle", "proxy", "milk", "paper", "uwu"].indexOf(base) !== -1
   // квадратность углов (sq у Vitreus): 1 — почти прямые, 0 — как у стекла
   readonly property real squareness: ({ retro: 1, doodle: 1, proxy: 1, cyber: 1, paper: 0.6 })[base] || 0
   readonly property color inkColor: Commons.Color.foreground

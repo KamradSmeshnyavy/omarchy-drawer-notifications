@@ -250,10 +250,14 @@ Item {
     readonly property color ink: Commons.Color.foreground
     readonly property color accent: Commons.Color.accent
     readonly property real r: Math.max(2, card.radius * (1 - 0.73 * card.style.squareness))
-    readonly property real bw: ({ retro: 2.3, doodle: 2.8, proxy: 1.9, paper: 1.6 })[b] || 0
-    readonly property color line: b === "paper" ? Qt.rgba(ink.r, ink.g, ink.b, 0.45) : b === "proxy" ? Qt.rgba(0.9, 0.95, 0.96, 0.6) : ink
-    readonly property point hard: ({ retro: Qt.point(6, 7), doodle: Qt.point(3.5, 3.5), proxy: Qt.point(3.4, 4) })[b] || Qt.point(0, 0)
-    readonly property color hardColor: b === "proxy" ? "#2a8cff" : b === "doodle" ? ink : Qt.rgba(ink.r, ink.g, ink.b, 0.55)
+    readonly property real bw: ({ retro: 2.3, doodle: 2.8, proxy: 1.9, paper: 1.6, uwu: 3 })[b] || 0
+    // uwu: контур — deep его темы (чернила темнее), тень — deep, на три четверти ушедший в розовый #ff6ec7
+    readonly property color deep: Qt.darker(ink, 1.45)
+    readonly property color line: b === "paper" ? Qt.rgba(ink.r, ink.g, ink.b, 0.45) : b === "proxy" ? Qt.rgba(0.9, 0.95, 0.96, 0.6) : b === "uwu" ? deep : ink
+    readonly property point hard: ({ retro: Qt.point(6, 7), doodle: Qt.point(3.5, 3.5), proxy: Qt.point(3.4, 4), uwu: Qt.point(4, 5) })[b] || Qt.point(0, 0)
+    readonly property color hardColor: b === "proxy" ? "#2a8cff" : b === "doodle" ? ink : b === "uwu" ? Qt.rgba(deep.r * 0.25 + 0.75, deep.g * 0.25 + 0.43, deep.b * 0.25 + 0.78, 0.9) : Qt.rgba(ink.r, ink.g, ink.b, 0.55)
+    // uwu: «конфетный пластик» — его пастельный градиент (розовый → сиреневый → голубой → розовый) по диагонали
+    readonly property bool candy: b === "uwu"
 
     // слитые края: тело тянется за край на ext (закрывает контур бара), а его свой контур и углы уходят за обрезку
     readonly property real ext: card.mergeExt
@@ -302,6 +306,15 @@ Item {
         color: plastic.fill
         border.width: plastic.bw
         border.color: plastic.line
+        gradient: plastic.candy ? candyGrad : null
+        Gradient {
+          id: candyGrad
+          orientation: Gradient.Horizontal
+          GradientStop { position: 0; color: "#ffb3dc" }
+          GradientStop { position: 0.38; color: "#cfc4ff" }
+          GradientStop { position: 0.68; color: "#aab4ff" }
+          GradientStop { position: 1; color: "#ffd0ea" }
+        }
       }
     }
     // вогнутые изгибы у слитых краёв (по два на край)
@@ -317,12 +330,12 @@ Item {
         edge: modelData[0]; side: modelData[1]
         w: card.width; h: card.height
         f: card.mergeFillet; bw: plastic.bw; ext: plastic.ext
-        fill: plastic.fill; line: plastic.line
+        fill: plastic.candy ? "#cfc4ff" : plastic.fill; line: plastic.line
       }
     }
     // retro: светлая кромка (литой край)
     Rectangle {
-      visible: plastic.b === "retro" && !card.merged("top")
+      visible: (plastic.b === "retro" || plastic.candy) && !card.merged("top")
       x: plastic.bw + 1; y: plastic.bw + 1
       width: parent.width - 2 * (plastic.bw + 1); height: 2
       radius: 1
