@@ -47,6 +47,7 @@ Item {
   property real glassJoin3Radius: 16
   property rect glassCut: Qt.rect(0, 0, 0, 0)
   property rect glassCut2: Qt.rect(0, 0, 0, 0)
+  property rect glassCut3: Qt.rect(0, 0, 0, 0)
   // пластик: края, которыми карточка слита с баром или рамкой ("top" "bottom" "left" "right") — там нет контура,
   // карточка заходит на mergeExt px на контур бара, по бокам — вогнутые изгибы mergeFillet с контуром
   property var mergeEdges: []
@@ -407,6 +408,7 @@ Item {
       join3Radius: card.glassJoin3Radius
       cutRect: card.glassCut
       cut2Rect: card.glassCut2
+      cut3Rect: card.glassCut3
       tintColor: Qt.rgba(card.style.color.r, card.style.color.g, card.style.color.b, 1)
     }
     Rectangle {   visible: !card.realGlass  // свет сверху: мягкий градиент на верхней трети
