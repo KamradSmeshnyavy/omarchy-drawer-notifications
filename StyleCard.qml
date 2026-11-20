@@ -41,6 +41,10 @@ Item {
   property rect glassJoin2: Qt.rect(0, 0, 0, 0)
   property real glassJoin2K: 0
   property real glassJoin2Radius: 0
+  // третья фигура — соседняя карточка, с которой эта сливается (WidgetCard: стекло двух виджетов рядом — один кусок)
+  property rect glassJoin3: Qt.rect(0, 0, 0, 0)
+  property real glassJoin3K: 0
+  property real glassJoin3Radius: 16
   property rect glassCut: Qt.rect(0, 0, 0, 0)
   property rect glassCut2: Qt.rect(0, 0, 0, 0)
   // пластик: края, которыми карточка слита с баром или рамкой ("top" "bottom" "left" "right") — там нет контура,
@@ -385,6 +389,9 @@ Item {
       join2Rect: card.glassJoin2
       join2K: card.glassJoin2K
       join2Radius: card.glassJoin2Radius
+      join3Rect: card.glassJoin3
+      join3K: card.glassJoin3K
+      join3Radius: card.glassJoin3Radius
       cutRect: card.glassCut
       cut2Rect: card.glassCut2
       tintColor: Qt.rgba(card.style.color.r, card.style.color.g, card.style.color.b, 1)
