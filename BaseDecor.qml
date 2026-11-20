@@ -195,9 +195,31 @@ Item {
         y: d.h - 22 + 2 * Math.sin((d.tick * 0.14 * 200 + index * 90) * Math.PI / 180)
         text: "♥"
         font.pixelSize: index === 0 ? 15 : 12
-        color: "#ff6fae"
+        color: index === 0 ? "#ff6eb4" : "#b69cff"
         style: Text.Outline
         styleColor: d.ink
+      }
+    }
+  }
+
+  // лапки внизу справа (три следа, как у Vitreus UwU)
+  Repeater {
+    model: d.b === "uwu" && d.botFree ? 3 : 0
+    Item {
+      id: paw
+      required property int index
+      x: d.w - 70 + index * 22
+      y: d.h - 4 - (index % 2) * 3
+      rotation: -12 + index * 12
+      Rectangle { x: -5.5; y: -3; width: 11; height: 9; radius: 4.5; color: "#ff8fc8"; border.width: 1.4; border.color: d.ink }
+      Repeater {
+        model: [[-7, -8], [-2.2, -11], [2.8, -11], [7.4, -8]]
+        Rectangle {
+          required property var modelData
+          x: modelData[0] - 2.6; y: modelData[1] - 2.6
+          width: 5.2; height: 5.2; radius: 2.6
+          color: "#ff8fc8"; border.width: 1.2; border.color: d.ink
+        }
       }
     }
   }
