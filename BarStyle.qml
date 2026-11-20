@@ -64,6 +64,12 @@ QtObject {
   readonly property real shadowBlur: elevation >= 2 ? 1.0 : 0.8
   readonly property real lift: elevation          // множитель вертикального сдвига тени
   readonly property real motion: Math.max(0, num(look.motion, 1))
+  // appear — как панели появляются: drip — «капля» вытекает из бара и садится с дрожью, по бару бежит рябь (DripMotion,
+  // как у Vitreus); classic — анимации каждой панели как раньше. Выбор пользователя — panel-shadow.json panelAppear
+  // (Customizer → Виджеты, любому райсу), auto — как у стиля (style.json appear; без ключа у liquid — drip, иначе classic).
+  readonly property string appear: ["drip", "classic"].indexOf(String(shade.panelAppear)) !== -1 ? String(shade.panelAppear)
+    : ["drip", "classic"].indexOf(String(look.appear)) !== -1 ? String(look.appear) : (String(look.material) === "liquid" ? "drip" : "classic")
+  readonly property bool drip: appear === "drip" && motion > 0
   function ms(d) { return Math.round(d * motion) }
   readonly property string material: ["solid", "glass", "paper", "soft", "brutal", "bevel", "glow", "liquid", "pixel"].indexOf(String(look.material)) !== -1
     ? String(look.material) : "auto"

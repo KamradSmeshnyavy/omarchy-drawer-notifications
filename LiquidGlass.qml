@@ -53,6 +53,10 @@ Item {
   // тянется перешейком; без выреза кусок бара под перешейком светлее остального (стекло вдвое)
   property rect cutRect: Qt.rect(0, 0, 0, 0)
   property rect cut2Rect: Qt.rect(0, 0, 0, 0)
+  // рябь по краю (DripMotion → бар): rippleAt — откуда, в координатах элемента; rippleT 0…1 — время; rippleAmp — сила, px
+  property point rippleAt: Qt.point(0, 0)
+  property real rippleT: 0
+  property real rippleAmp: 0
   // главная фигура; по умолчанию — весь элемент
   property rect panelRect: Qt.rect(0, 0, width, height)
   property bool active: visible
@@ -212,6 +216,7 @@ Item {
     readonly property vector4d join: Qt.vector4d(glass.joinRect.x + glass.bleed, glass.joinRect.y + glass.bleed, glass.joinRect.width, glass.joinRect.height)
     readonly property vector4d cut: Qt.vector4d(glass.cutRect.x + glass.bleed, glass.cutRect.y + glass.bleed, glass.cutRect.width, glass.cutRect.height)
     readonly property vector4d cut2: Qt.vector4d(glass.cut2Rect.x + glass.bleed, glass.cut2Rect.y + glass.bleed, glass.cut2Rect.width, glass.cut2Rect.height)
+    readonly property vector4d ripple: Qt.vector4d(glass.rippleAt.x + glass.bleed, glass.rippleAt.y + glass.bleed, glass.rippleT, glass.rippleAmp)
     readonly property real joinR: glass.joinRadius
     readonly property real joinK: glass.joinK
     property var sharpTex: sharp

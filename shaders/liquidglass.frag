@@ -39,6 +39,7 @@ layout(std140, binding = 0) uniform buf {
     vec4 frame;     // x — 1 рамка есть, y — скругление дырки, z — слияние рамки с фигурами
     vec4 cut;       // здесь стекло не рисуется (внутри бара или рамки: там своё стекло, фигура только тянется к нему)
     vec4 cut2;
+    vec4 ripple;    // рябь по краю (панель втянулась в бар, как у Vitreus): xy — откуда (px эффекта), z — 0…1 время, w — сила px
 };
 layout(binding = 1) uniform sampler2D sharpTex;
 layout(binding = 2) uniform sampler2D softTex;
@@ -83,18 +84,28 @@ float shape(vec2 p) {
     return d;
 }
 
+// рябь: кольцо расходится от точки и гаснет, край фигуры колышется (3 гребня, затухает к концу и вдаль)
+float rippleAt(vec2 p) {
+    if (ripple.w <= 0.0 || ripple.z <= 0.0 || ripple.z >= 1.0) return 0.0;
+    float t = ripple.z;
+    float r = length(p - ripple.xy);
+    float front = 40.0 + 520.0 * t;
+    float env = smoothstep(front, front - 60.0, r) * (1.0 - t) * (1.0 - t) * exp(-r / 260.0);
+    return ripple.w * env * sin(r / 13.0 - t * 22.0);
+}
+
 void main() {
     vec2 p = qt_TexCoord0 * size;
     if ((cut.z > 0.5 && p.x > cut.x && p.y > cut.y && p.x < cut.x + cut.z && p.y < cut.y + cut.w) ||
         (cut2.z > 0.5 && p.x > cut2.x && p.y > cut2.y && p.x < cut2.x + cut2.z && p.y < cut2.y + cut2.w)) { fragColor = vec4(0.0); return; }
-    float d = shape(p);
+    float d = shape(p) + rippleAt(p);
     float mask = clamp(0.5 - d, 0.0, 1.0);
     if (mask <= 0.0) { fragColor = vec4(0.0); return; }
 
     // нормаль края — градиент расстояния
     float e = 1.0;
-    vec2 n = normalize(vec2(shape(p + vec2(e, 0.0)) - shape(p - vec2(e, 0.0)),
-                            shape(p + vec2(0.0, e)) - shape(p - vec2(0.0, e))) + 1e-5);
+    vec2 n = normalize(vec2(shape(p + vec2(e, 0.0)) + rippleAt(p + vec2(e, 0.0)) - shape(p - vec2(e, 0.0)) - rippleAt(p - vec2(e, 0.0)),
+                            shape(p + vec2(0.0, e)) + rippleAt(p + vec2(0.0, e)) - shape(p - vec2(0.0, e)) - rippleAt(p - vec2(0.0, e))) + 1e-5);
     float inside = -d;                                   // 0 на краю, растёт внутрь
     float t = clamp(1.0 - inside / max(lens, 1.0), 0.0, 1.0);
     float bend = t * t * refr * lens * 1.6;              // у самого края сильнее, к середине — ноль
